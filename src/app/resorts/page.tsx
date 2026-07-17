@@ -106,35 +106,39 @@ function ResortsBrowseContent() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-stone-50 text-stone-900 pb-24">
+    <div className="w-full min-h-screen bg-[#141414] text-[#E5E5E5] pb-24 pt-24 relative overflow-hidden">
       
+      {/* Glow Backdrops */}
+      <div className="absolute top-[10%] left-[-15%] w-[500px] h-[500px] bg-brand-accent/3 rounded-full blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute bottom-[30%] right-[-15%] w-[500px] h-[500px] bg-brand-accent/3 rounded-full blur-[140px] pointer-events-none -z-10" />
+
       {/* 1. Header Hero section */}
-      <section className="bg-white border-b border-stone-200 py-16 px-4 sm:px-8 text-center space-y-6 shadow-sm">
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-orange-600 border border-orange-500/20">
+      <section className="py-16 px-4 sm:px-8 text-center space-y-6 relative z-10">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent border border-brand-accent/20">
           <span>Global Resort Collection</span>
         </div>
-        <h1 className="font-sans text-4xl sm:text-6xl font-extrabold tracking-tight text-stone-900 leading-tight">
+        <h1 className="font-heading text-4xl sm:text-6xl font-normal tracking-tight text-white leading-tight">
           Browse All Resorts & Rooms
         </h1>
-        <p className="mx-auto max-w-xl text-stone-500 text-xs sm:text-sm font-light leading-relaxed">
-          Explore our collection of 100 properties, map accommodations, compare pricing rates, and reserve your dream stay instantly.
+        <p className="mx-auto max-w-xl text-[#A0A0A0] text-xs sm:text-sm font-medium leading-relaxed">
+          Explore our collection of premium properties, map accommodations, compare pricing rates, and reserve your dream stay instantly.
         </p>
 
         {/* Dynamic Search Parameters Bar */}
-        <form onSubmit={handleSearchSubmit} className="mx-auto max-w-2xl bg-white border border-stone-200 rounded-full p-2 shadow-md flex items-center gap-3">
+        <form onSubmit={handleSearchSubmit} className="mx-auto max-w-2xl bg-[#1A1A1A]/80 border border-white/5 rounded-full p-2 shadow-2xl flex items-center gap-3 focus-within:border-brand-accent transition-colors">
           <div className="flex items-center gap-2 pl-4 flex-grow">
-            <Search className="h-4.5 w-4.5 text-stone-400 shrink-0" />
+            <Search className="h-4.5 w-4.5 text-[#555] shrink-0" />
             <input
               type="text"
               placeholder="Search resorts, locations, regions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent text-xs text-stone-850 outline-none w-full placeholder-stone-400 font-bold"
+              className="bg-transparent text-xs text-white outline-none w-full placeholder-stone-600 font-bold"
             />
           </div>
           <button
             type="submit"
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs uppercase px-6 py-3 rounded-full transition-all shrink-0 shadow-md shadow-orange-500/10"
+            className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold text-xs uppercase px-6 py-3 rounded-full transition-all shrink-0 shadow-lg cursor-pointer"
           >
             Search Collection
           </button>
@@ -142,7 +146,7 @@ function ResortsBrowseContent() {
       </section>
 
       {/* 2. MAIN LAYOUT AND FILTERS */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-10 relative z-10">
         
         {/* Category Filters */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none justify-center">
@@ -159,10 +163,10 @@ function ResortsBrowseContent() {
                 setSelectedCategory(cat.id);
                 setPage(1);
               }}
-              className={`px-5 py-2.5 rounded-full border text-[11px] font-bold uppercase tracking-wider shrink-0 transition-all flex items-center gap-2 ${
+              className={`px-5 py-2.5 rounded-full border text-[11px] font-bold uppercase tracking-wider shrink-0 transition-all flex items-center gap-2 cursor-pointer ${
                 selectedCategory === cat.id
-                  ? 'border-orange-500 bg-orange-500/10 text-orange-600 shadow-sm'
-                  : 'border-stone-200 bg-white hover:border-stone-300 text-stone-500 hover:text-stone-850'
+                  ? 'border-brand-accent/35 bg-brand-accent/10 text-brand-accent shadow-lg shadow-brand-accent/5'
+                  : 'border-white/5 bg-[#1A1A1A]/40 text-[#A0A0A0] hover:border-white/10 hover:text-white'
               }`}
             >
               <span>{cat.icon}</span>
@@ -172,7 +176,7 @@ function ResortsBrowseContent() {
         </div>
 
         {/* Results Info */}
-        <div className="flex justify-between items-center text-xs text-stone-500 uppercase tracking-wider font-bold">
+        <div className="flex justify-between items-center text-xs text-[#8a8a8a] uppercase tracking-wider font-black select-none">
           <span>Found {total} properties</span>
           <span>Showing page {page} of {totalPages}</span>
         </div>
@@ -180,14 +184,14 @@ function ResortsBrowseContent() {
         {/* Resorts Grid */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-3">
-            <Loader2 className="h-8 w-8 text-orange-500 animate-spin" />
-            <span className="text-xs text-stone-500 font-bold uppercase">Loading property grid...</span>
+            <Loader2 className="h-8 w-8 text-brand-accent animate-spin" />
+            <span className="text-xs text-[#8a8a8a] font-bold uppercase">Loading property grid...</span>
           </div>
         ) : resorts.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-stone-200 rounded-[32px] space-y-4 shadow-sm">
-            <span className="text-4xl">🏖️</span>
-            <h3 className="font-sans text-lg font-bold text-stone-750 uppercase">No resorts matched your request</h3>
-            <p className="text-stone-400 text-xs max-w-xs mx-auto">
+          <div className="text-center py-20 bg-[#1A1A1A]/80 border border-white/5 rounded-[32px] space-y-4 shadow-2xl">
+            <span className="text-4xl block">🏖️</span>
+            <h3 className="font-sans text-lg font-bold text-white uppercase">No resorts matched your request</h3>
+            <p className="text-[#8a8a8a] text-xs max-w-xs mx-auto">
               Please adjust your destination filter tags or type keywords into the search box.
             </p>
           </div>
@@ -205,7 +209,7 @@ function ResortsBrowseContent() {
               return (
                 <div 
                   key={r.id} 
-                  className="rounded-[32px] overflow-hidden border border-stone-200 bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                  className="rounded-[32px] overflow-hidden border border-white/5 bg-[#1A1A1A]/80 backdrop-blur-md shadow-2xl hover:border-brand-accent/20 transition-all duration-300 flex flex-col justify-between"
                 >
                   <div className="space-y-4">
                     {/* Header Image */}
@@ -213,16 +217,16 @@ function ResortsBrowseContent() {
                       <img 
                         src={cardImage} 
                         alt={r.name} 
-                        className="w-full h-full object-cover transition-transform duration-700 hover:scale-103"
+                        className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
                       
-                      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-bold text-stone-900 flex items-center gap-1 shadow">
-                        <Star className="h-3 w-3 fill-orange-500 text-orange-500" />
+                      <div className="absolute top-4 left-4 bg-[#141414]/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-bold text-brand-accent flex items-center gap-1 shadow-lg border border-white/5">
+                        <Star className="h-3 w-3 fill-brand-accent text-brand-accent" />
                         <span>{r.rating.toFixed(1)}</span>
                       </div>
 
-                      <div className="absolute bottom-4 left-4 flex items-center gap-1 text-[9px] font-bold uppercase text-orange-400 tracking-wider">
+                      <div className="absolute bottom-4 left-4 flex items-center gap-1 text-[9px] font-black uppercase text-brand-accent tracking-widest">
                         <MapPin className="h-3 w-3" />
                         <span>{r.location}</span>
                       </div>
@@ -230,8 +234,8 @@ function ResortsBrowseContent() {
 
                     {/* Content details */}
                     <div className="px-6 space-y-3">
-                      <h3 className="font-sans text-xl font-bold text-stone-900 line-clamp-1">{r.name}</h3>
-                      <p className="text-stone-500 text-xs leading-relaxed line-clamp-3 min-h-[3.3rem]">
+                      <h3 className="font-sans text-xl font-bold text-white line-clamp-1">{r.name}</h3>
+                      <p className="text-[#A0A0A0] text-xs leading-relaxed line-clamp-3 min-h-[3.3rem]">
                         {r.description}
                       </p>
                     </div>
@@ -242,34 +246,34 @@ function ResortsBrowseContent() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => router.push(`/book/${r.id}`)}
-                        className="flex-grow rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs uppercase py-3 px-4 transition-all text-center flex items-center justify-center gap-1 shadow-md shadow-orange-500/10"
+                        className="flex-grow rounded-full bg-brand-accent hover:bg-brand-accent-hover text-white font-bold text-xs uppercase py-3 px-4 transition-all text-center flex items-center justify-center gap-1 shadow-lg cursor-pointer"
                       >
                         <span>Reserve Suite</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => setExpandedResortId(isExpanded ? null : r.id)}
-                        className="rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-600 font-bold text-xs uppercase px-4 py-3 transition-all flex items-center justify-center gap-1.5 shrink-0"
+                        className="rounded-full border border-white/5 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase px-4 py-3 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
                       >
-                        <Layers className="h-3.5 w-3.5" />
+                        <Layers className="h-3.5 w-3.5 text-brand-accent" />
                         <span>{isExpanded ? 'Hide Rooms' : 'Show Rooms'}</span>
                       </button>
                     </div>
 
                     {/* Room expansion section */}
                     {isExpanded && (
-                      <div className="pt-4 border-t border-stone-100 space-y-3 animate-fade-in text-[11px]">
-                        <span className="block font-bold uppercase text-[9px] text-stone-400 tracking-wider">Room category details</span>
+                      <div className="pt-4 border-t border-white/5 space-y-3 animate-fade-in text-[11px]">
+                        <span className="block font-black uppercase text-[9px] text-[#8a8a8a] tracking-wider">Room category details</span>
                         
                         {r.rooms.map((room) => (
-                          <div key={room.id} className="p-3 bg-stone-50 rounded-xl border border-stone-100 flex items-center justify-between">
+                          <div key={room.id} className="p-3 bg-[#141414]/80 rounded-xl border border-white/5 flex items-center justify-between">
                             <div>
-                              <span className="font-bold text-stone-850 block">{room.roomType.name}</span>
-                              <span className="text-[9px] text-stone-500">Max occupency: {room.roomType.maxOccupency} Guests</span>
+                              <span className="font-bold text-white block">{room.roomType.name}</span>
+                              <span className="text-[9px] text-[#8a8a8a]">Max occupancy: {room.roomType.maxOccupency} Guests</span>
                             </div>
                             <div className="text-right">
-                              <span className="font-bold text-orange-500 block">${Number(room.roomType.basePrice).toFixed(0)}</span>
-                              <span className="text-[9px] text-stone-400 block uppercase">Per night</span>
+                              <span className="font-bold text-brand-accent block">${Number(room.roomType.basePrice).toFixed(0)}</span>
+                              <span className="text-[9px] text-[#8a8a8a] block uppercase">Per night</span>
                             </div>
                           </div>
                         ))}
@@ -284,11 +288,11 @@ function ResortsBrowseContent() {
 
         {/* Pagination controller */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-stone-200 pt-10 text-xs font-bold text-stone-500 uppercase tracking-wider">
+          <div className="flex items-center justify-between border-t border-white/5 pt-10 text-xs font-bold text-[#A0A0A0] uppercase tracking-wider select-none">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="rounded-full border border-stone-200 bg-white px-5 py-3 hover:bg-stone-50 disabled:opacity-40 flex items-center gap-1 transition-all"
+              className="rounded-full border border-white/5 bg-[#1A1A1A]/80 px-5 py-3 hover:bg-white/5 disabled:opacity-40 flex items-center gap-1 transition-all cursor-pointer"
             >
               <ChevronLeft className="h-4.5 w-4.5" />
               <span>Previous Page</span>
@@ -297,7 +301,7 @@ function ResortsBrowseContent() {
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="rounded-full border border-stone-200 bg-white px-5 py-3 hover:bg-stone-50 disabled:opacity-40 flex items-center gap-1 transition-all"
+              className="rounded-full border border-white/5 bg-[#1A1A1A]/80 px-5 py-3 hover:bg-white/5 disabled:opacity-40 flex items-center gap-1 transition-all cursor-pointer"
             >
               <span>Next Page</span>
               <ChevronRight className="h-4.5 w-4.5" />
@@ -314,9 +318,9 @@ function ResortsBrowseContent() {
 export default function ResortsBrowsePage() {
   return (
     <Suspense fallback={
-      <div className="flex flex-col items-center justify-center min-h-screen space-y-3 bg-stone-50">
-        <Loader2 className="h-8 w-8 text-orange-500 animate-spin" />
-        <span className="text-xs text-stone-500 font-bold uppercase tracking-wider animate-pulse">
+      <div className="flex flex-col items-center justify-center min-h-screen space-y-3 bg-[#141414]">
+        <Loader2 className="h-8 w-8 text-brand-accent animate-spin" />
+        <span className="text-xs text-[#8a8a8a] font-bold uppercase tracking-wider animate-pulse">
           Loading Search Collection...
         </span>
       </div>

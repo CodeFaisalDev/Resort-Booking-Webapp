@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -9,59 +9,119 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Don't render general navbar on the homepage
   if (pathname === '/') return null;
 
+  const isActive = (path: string) => {
+    if (path === '/resorts' && pathname?.startsWith('/resorts')) return true;
+    return pathname === path;
+  };
+
+  const linkStyle = (path: string) => {
+    return `transition-colors uppercase tracking-[0.2em] text-[11px] font-semibold ${
+      isActive(path) ? 'text-brand-accent' : 'text-[#A0A0A0] hover:text-white'
+    }`;
+  };
+
   return (
-    <header className="w-full bg-white border-b border-stone-200 sticky top-0 z-50 px-4 sm:px-8 py-4 shadow-sm flex items-center justify-between">
-      {/* Brand logo */}
-      <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => router.push('/')}>
-        <span className="font-sans text-2xl font-extrabold tracking-tight text-stone-900 flex items-center">
-          ESKAP<span className="text-orange-500 italic">INN</span>
-        </span>
-      </div>
-
-      {/* Center menu options */}
-      <div className="hidden md:flex items-center gap-8 text-xs font-semibold text-stone-600 uppercase tracking-wider">
-        <Link href="/about" className="hover:text-orange-500 transition-colors">Contact Customer</Link>
-        <Link href="/resorts" className="hover:text-orange-500 transition-colors">Hotels</Link>
-        <Link href="/book" className="hover:text-orange-500 transition-colors">Explore Map</Link>
-        <div className="flex items-center gap-1 cursor-pointer hover:text-orange-500 transition-colors">
-          <span>USD</span>
-          <span className="text-[10px]">🇺🇸</span>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#141414]/90 backdrop-blur-md py-4 px-4 md:px-16 border-b border-white/10 shadow-lg">
+      <div className="flex items-center justify-between">
+        {/* Brand logo */}
+        <div className="flex items-center gap-2 cursor-pointer select-none" onClick={() => router.push('/')}>
+          <span className="font-heading text-lg md:text-2xl font-semibold tracking-wide text-white">
+            BOOKME<span className="text-brand-accent">.COM</span>
+          </span>
         </div>
-        <button className="relative p-1 text-stone-500 hover:text-orange-500 transition-all">
-          <Bell className="h-4.5 w-4.5" />
-          <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-orange-500 rounded-full" />
-        </button>
+
+        {/* Center menu links */}
+        <div className="hidden md:flex items-center gap-10">
+          <Link href="/book" className={linkStyle('/book')}>
+            Stays Map
+          </Link>
+          <Link href="/resorts" className={linkStyle('/resorts')}>
+            Destinations
+          </Link>
+          <Link href="/about" className={linkStyle('/about')}>
+            About & Experiences
+          </Link>
+        </div>
+
+        {/* Right action button */}
+        <div className="flex items-center gap-4">
+          <div className="hidden md:block">
+            {session ? (
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => router.push('/dashboard')}
+                  className="bg-brand-accent hover:bg-brand-accent-hover text-white text-[11px] font-bold uppercase tracking-wider py-2.5 px-6 rounded-lg transition-all active:scale-95 cursor-pointer"
+                >
+                  Dashboard
+                </button>
+                <button 
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  className="text-[#A0A0A0] hover:text-white text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => router.push('/login')}
+                className="bg-brand-accent hover:bg-brand-accent-hover text-white text-[11px] font-bold uppercase tracking-wider py-2.5 px-6 rounded-lg transition-all active:scale-95 cursor-pointer"
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+
+          {/* Mobile hamburger */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+            className="md:hidden flex flex-col items-center justify-center w-9 h-9 gap-1.5 bg-transparent border-none cursor-pointer"
+            aria-label="Toggle menu"
+          >
+            <span className={`w-5 h-[1.5px] bg-white transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-[4.5px]' : ''}`} />
+            <span className={`w-5 h-[1.5px] bg-white transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
+            <span className={`w-5 h-[1.5px] bg-white transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-[4.5px]' : ''}`} />
+          </button>
+        </div>
       </div>
 
-      {/* Right action button */}
-      <div>
-        {session ? (
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => router.push('/dashboard')}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs uppercase px-5 py-2.5 rounded-full shadow-md transition-all active:scale-95"
-            >
-              Dashboard
-            </button>
-            <button 
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="text-stone-500 hover:text-stone-900 font-bold text-xs uppercase transition-all"
-            >
-              Logout
-            </button>
+      {/* Mobile dropdown menu */}
+      <div className={`md:hidden overflow-hidden transition-all duration-400 ease-in-out ${mobileMenuOpen ? 'max-h-[400px] opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+        <div className="flex flex-col gap-4 py-4 border-t border-white/10">
+          <Link href="/book" onClick={() => setMobileMenuOpen(false)} className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A0A0A0] hover:text-white transition-colors">Stays Map</Link>
+          <Link href="/resorts" onClick={() => setMobileMenuOpen(false)} className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A0A0A0] hover:text-white transition-colors">Destinations</Link>
+          <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A0A0A0] hover:text-white transition-colors">About & Contact</Link>
+          <div className="pt-2 border-t border-white/5 flex flex-col gap-3">
+            {session ? (
+              <>
+                <button 
+                  onClick={() => { setMobileMenuOpen(false); router.push('/dashboard'); }} 
+                  className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white text-[11px] font-bold uppercase tracking-wider py-3 rounded-lg cursor-pointer"
+                >
+                  Dashboard
+                </button>
+                <button 
+                  onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: '/' }); }} 
+                  className="w-full border border-white/10 hover:border-white/20 text-white text-[11px] font-bold uppercase tracking-wider py-3 rounded-lg cursor-pointer"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <button 
+                onClick={() => { setMobileMenuOpen(false); router.push('/login'); }} 
+                className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white text-[11px] font-bold uppercase tracking-wider py-3 rounded-lg cursor-pointer"
+              >
+                Sign In
+              </button>
+            )}
           </div>
-        ) : (
-          <button 
-            onClick={() => router.push('/login')}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs uppercase px-6 py-2.5 rounded-full shadow-md transition-all active:scale-95"
-          >
-            Sign In
-          </button>
-        )}
+        </div>
       </div>
-    </header>
+    </nav>
   );
 }

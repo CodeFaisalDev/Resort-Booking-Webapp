@@ -114,3 +114,73 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any).type !== 'guest') {
+      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
+    }
+
+    const guestId = (session.user as any).id;
+    const { searchParams } = new URL(req.url);
+    const reservationId = searchParams.get('id');
+
+    if (!reservationId) {
+      return NextResponse.json({ error: 'Missing reservation identifier.' }, { status: 400 });
+    }
+
+    const reservation = await prisma.reservation.findUnique({
+      where: { id: reservationId },
+      include: { payments: true }
+    });
+
+    if (!reservation) {
+      return NextResponse.json({ error: 'Reservation not found.' }, { status: 404 });
+    }
+
+    if (reservation.guestId !== guestId) {
+      return NextResponse.json({ error: 'Forbidden: You do not own this reservation.' }, { status: 403 });
+    }
+
+    if (reservation.status === 'CANCELED') {
+      return NextResponse.json({ error: 'Reservation is already canceled.' }, { status: 400 });
+    }
+
+    // Check 7-day cancellation boundary
+    const checkInTime = new Date(reservation.checkIn).getTime();
+    const currentTime = Date.now();
+    const timeDiff = checkInTime - currentTime;
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+
+    if (timeDiff < sevenDaysInMs) {
+      return NextResponse.json({ 
+        error: 'Cancellation window expired. Bookings can only be canceled at least 7 days before check-in.' 
+      }, { status: 400 });
+    }
+
+    // Update reservation status and associated payments to REFUNDED
+    const updated = await prisma.$transaction(async (tx) => {
+      const res = await tx.reservation.update({
+        where: { id: reservationId },
+        data: { status: 'CANCELED' }
+      });
+
+      // Update associated payments to REFUNDED
+      await tx.payment.updateMany({
+        where: { reservationId },
+        data: { status: 'REFUNDED' }
+      });
+
+      return res;
+    });
+
+    return NextResponse.json({
+      message: 'Reservation canceled and refunded successfully.',
+      reservation: updated
+    });
+  } catch (error: any) {
+    console.error('Cancel Reservation API Error:', error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}

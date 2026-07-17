@@ -238,27 +238,120 @@ export default function HomePage() {
     const rafId = requestAnimationFrame(() => {
       ctx = gsap.context(() => {
 
-        // ─── 1. HERO ON-MOUNT REVEALS ───
-        gsap.fromTo('.hero-animate-tag', 
-          { opacity: 0, y: 30 }, 
-          { opacity: 1, y: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' }
-        );
-        gsap.fromTo('.hero-animate-title', 
-          { opacity: 0, y: 40 }, 
-          { opacity: 1, y: 0, duration: 1, delay: 0.3, ease: 'power3.out' }
-        );
-        gsap.fromTo('.hero-animate-desc', 
-          { opacity: 0, y: 30 }, 
-          { opacity: 1, y: 0, duration: 0.8, delay: 0.5, ease: 'power3.out' }
-        );
-        gsap.fromTo('.hero-animate-cta', 
-          { opacity: 0, y: 30 }, 
-          { opacity: 1, y: 0, duration: 0.8, delay: 0.6, ease: 'power3.out' }
-        );
-        gsap.fromTo('.hero-animate-card',
-          { opacity: 0, scale: 0.8, rotateY: 30 },
-          { opacity: 1, scale: 1, rotateY: 0, duration: 1.2, delay: 0.4, stagger: 0.15, ease: 'power4.out' }
-        );
+        // ─── 0. CINEMATIC INTRO PRELOADER ANIMATION ───
+        const skipPreloader = (window as any)._introCompleted;
+
+        const playHeroAnimations = () => {
+          gsap.fromTo('.hero-animate-tag', 
+            { opacity: 0, y: 30 }, 
+            { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }
+          );
+          gsap.fromTo('.hero-animate-title', 
+            { opacity: 0, y: 40 }, 
+            { opacity: 1, y: 0, duration: 1, delay: 0.15, ease: 'power3.out' }
+          );
+          gsap.fromTo('.hero-animate-desc', 
+            { opacity: 0, y: 30 }, 
+            { opacity: 1, y: 0, duration: 0.8, delay: 0.3, ease: 'power3.out' }
+          );
+          gsap.fromTo('.hero-animate-cta', 
+            { opacity: 0, y: 30 }, 
+            { opacity: 1, y: 0, duration: 0.8, delay: 0.45, ease: 'power3.out' }
+          );
+          gsap.fromTo('.hero-animate-card',
+            { opacity: 0, scale: 0.8, rotateY: 30 },
+            { opacity: 1, scale: 1, rotateY: 0, duration: 1.2, delay: 0.3, stagger: 0.15, ease: 'power4.out' }
+          );
+        };
+
+        if (skipPreloader) {
+          const loader = document.getElementById('intro-loader');
+          if (loader) loader.style.display = 'none';
+          document.body.style.overflow = 'auto';
+          playHeroAnimations();
+        } else {
+          document.body.style.overflow = 'hidden';
+
+          const introTl = gsap.timeline({
+            onComplete: () => {
+              (window as any)._introCompleted = true;
+              document.body.style.overflow = 'auto';
+
+              gsap.to('#intro-loader', {
+                yPercent: -100,
+                duration: 1.2,
+                ease: 'power4.inOut',
+                onComplete: () => {
+                  const loader = document.getElementById('intro-loader');
+                  if (loader) loader.style.display = 'none';
+                }
+              });
+
+              playHeroAnimations();
+            }
+          });
+
+          // 1. Logo slides up
+          introTl.to('.intro-logo', {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: 'power4.out'
+          });
+
+          // 2. Subtitle slides in
+          introTl.fromTo('.intro-subtitle', 
+            { opacity: 0, letterSpacing: '0.1em' },
+            { opacity: 1, letterSpacing: '0.35em', duration: 0.8, ease: 'power2.out' },
+            '-=0.6'
+          );
+
+          // 3. Sequential ticker animations
+          const words = gsap.utils.toArray('.intro-ticker-word');
+          words.forEach((word: any, index: number) => {
+            introTl.fromTo(word, 
+              { opacity: 0, y: 15 },
+              { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+            );
+            introTl.to('.intro-loader-bar', {
+              scaleX: (index + 1) / words.length,
+              duration: 0.5,
+              ease: 'power1.inOut'
+            }, '-=0.4');
+
+            if (index < words.length - 1) {
+              introTl.to(word, {
+                opacity: 0,
+                y: -15,
+                duration: 0.3,
+                ease: 'power2.in',
+                delay: 0.3
+              });
+            } else {
+              introTl.to(word, {
+                opacity: 0,
+                y: -10,
+                duration: 0.3,
+                ease: 'power2.in',
+                delay: 0.4
+              });
+            }
+          });
+
+          // 4. Fade out logo/subtitle before preloader curtain moves
+          introTl.to('.intro-logo', {
+            scale: 0.95,
+            opacity: 0,
+            duration: 0.6,
+            ease: 'power3.inOut'
+          }, '-=0.3');
+
+          introTl.to('.intro-subtitle', {
+            opacity: 0,
+            duration: 0.4,
+            ease: 'power2.in'
+          }, '-=0.5');
+        }
 
         // ─── 2. FIXED BACKDROP PARALLAX ZOOM ───
         gsap.to('.fixed-backdrop-bg', {
@@ -307,6 +400,26 @@ export default function HomePage() {
               rotateY: x * -12,
               rotateX: -y * 12,
               duration: 0.9,
+              ease: 'power2.out',
+              overwrite: 'auto'
+            });
+
+            gsap.to('.floating-card-4', {
+              x: x * -25,
+              y: y * 20,
+              rotateY: x * -15,
+              rotateX: -y * 15,
+              duration: 0.85,
+              ease: 'power2.out',
+              overwrite: 'auto'
+            });
+
+            gsap.to('.floating-card-5', {
+              x: x * 20,
+              y: y * -15,
+              rotateY: x * 18,
+              rotateX: -y * 18,
+              duration: 0.95,
               ease: 'power2.out',
               overwrite: 'auto'
             });
@@ -631,6 +744,44 @@ export default function HomePage() {
   return (
     <div ref={rootRef} className="w-full min-h-screen bg-transparent text-[#E5E5E5] antialiased relative overflow-x-hidden">
       
+      {/* Cinematic Intro Preloader Overlay */}
+      <div id="intro-loader" className="fixed inset-0 w-full h-full bg-[#090909] z-[9999] flex flex-col justify-center items-center overflow-hidden">
+        <div className="flex flex-col items-center max-w-md w-full px-6 text-center select-none">
+          {/* Logo Reveal */}
+          <div className="overflow-hidden mb-4">
+            <span className="intro-logo font-heading text-4xl sm:text-6xl font-normal text-white tracking-[0.25em] block opacity-0 translate-y-full">
+              BOOKME<span className="text-brand-accent">.COM</span>
+            </span>
+          </div>
+          
+          {/* Destination ticker container */}
+          <div className="h-6 overflow-hidden relative w-full mb-8">
+            <div className="intro-ticker-word text-[10px] font-bold text-[#666] uppercase tracking-[0.3em] opacity-0 text-center w-full absolute">
+              MALDIVES OVERWATER
+            </div>
+            <div className="intro-ticker-word text-[10px] font-bold text-[#666] uppercase tracking-[0.3em] opacity-0 text-center w-full absolute">
+              BALI RETREATS
+            </div>
+            <div className="intro-ticker-word text-[10px] font-bold text-[#666] uppercase tracking-[0.3em] opacity-0 text-center w-full absolute">
+              SANTORINI CLIFFS
+            </div>
+            <div className="intro-ticker-word text-[10px] font-bold text-[#666] uppercase tracking-[0.3em] opacity-0 text-center w-full absolute">
+              DUBAI SANCTUARY
+            </div>
+          </div>
+
+          {/* Loader bar */}
+          <div className="w-48 h-[1px] bg-white/10 relative overflow-hidden rounded">
+            <div className="intro-loader-bar absolute top-0 left-0 bottom-0 w-full bg-brand-accent origin-left scale-x-0" />
+          </div>
+          
+          {/* Subtitle */}
+          <span className="intro-subtitle text-[8px] font-black uppercase tracking-[0.35em] text-[#444] mt-3 opacity-0 block">
+            Designing Escape
+          </span>
+        </div>
+      </div>
+
       {/* 0. FIXED DYNAMIC BACKDROP (Section overlay background) */}
       <div 
         className="fixed-backdrop-bg transition-all duration-1000"

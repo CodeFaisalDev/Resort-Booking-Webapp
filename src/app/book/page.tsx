@@ -82,40 +82,40 @@ export default function BookPage() {
   };
 
   return (
-    <div className="flex flex-col flex-grow bg-stone-950 w-full relative">
+    <div className="flex flex-col flex-grow bg-[#141414] text-[#E5E5E5] w-full relative pt-24 pb-20 overflow-hidden">
       
       {/* 1. Header Filter Controls */}
-      <section className="bg-stone-900/30 border-b border-stone-900 py-6 px-4 sm:px-6 lg:px-8 z-10 relative">
+      <section className="bg-[#1A1A1A]/40 border-b border-white/5 py-6 px-4 sm:px-6 lg:px-8 z-10 relative">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
           
           {/* Brand header */}
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <Compass className="h-8 w-8 text-amber-400 shrink-0" />
+            <Compass className="h-8 w-8 text-brand-accent shrink-0 animate-spin-slow" />
             <div>
-              <h1 className="font-serif text-lg sm:text-xl font-bold text-stone-200 uppercase tracking-wider">
+              <h1 className="font-heading text-lg sm:text-xl font-normal text-white uppercase tracking-wider">
                 Explore Destinations
               </h1>
-              <span className="text-[10px] text-stone-500 font-semibold uppercase tracking-wider">
+              <span className="text-[10px] text-[#8a8a8a] font-bold uppercase tracking-wider">
                 {totalResorts} Luxury properties found
               </span>
             </div>
           </div>
 
           {/* Search form */}
-          <form onSubmit={handleSearchSubmit} className="w-full md:max-w-md bg-stone-950/80 border border-stone-850 rounded-full p-1.5 flex items-center shadow-lg">
+          <form onSubmit={handleSearchSubmit} className="w-full md:max-w-md bg-[#1A1A1A]/80 border border-white/5 rounded-full p-1.5 flex items-center shadow-lg focus-within:border-brand-accent transition-colors">
             <div className="flex items-center gap-2 pl-4 flex-grow">
-              <Search className="h-4 w-4 text-stone-500 shrink-0" />
+              <Search className="h-4 w-4 text-[#555] shrink-0" />
               <input
                 type="text"
                 placeholder="Search by name, location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent text-xs text-stone-200 outline-none w-full placeholder-stone-600 font-semibold"
+                className="bg-transparent text-xs text-white outline-none w-full placeholder-stone-600 font-bold"
               />
             </div>
             <button
               type="submit"
-              className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs uppercase px-5 py-2.5 rounded-full transition-all shrink-0"
+              className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold text-xs uppercase px-5 py-2.5 rounded-full transition-all shrink-0 cursor-pointer shadow-lg"
             >
               Search
             </button>
@@ -138,10 +138,10 @@ export default function BookPage() {
                 setSelectedType(cat.id);
                 setPage(1);
               }}
-              className={`px-5 py-2.5 rounded-full border text-[11px] font-bold uppercase tracking-wider shrink-0 transition-all flex items-center gap-2 ${
+              className={`px-5 py-2.5 rounded-full border text-[11px] font-bold uppercase tracking-wider shrink-0 transition-all flex items-center gap-2 cursor-pointer ${
                 selectedType === cat.id
-                  ? 'border-amber-500/35 bg-amber-500/10 text-amber-400 shadow-md shadow-amber-500/5'
-                  : 'border-stone-850 bg-stone-900/10 hover:border-stone-800 text-stone-400 hover:text-stone-200'
+                  ? 'border-brand-accent/35 bg-brand-accent/10 text-brand-accent shadow-lg shadow-brand-accent/5'
+                  : 'border-white/5 bg-[#1A1A1A]/40 text-[#A0A0A0] hover:border-white/10 hover:text-white'
               }`}
             >
               <span>{cat.icon}</span>
@@ -161,14 +161,14 @@ export default function BookPage() {
           
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-4">
-              <span className="w-8 h-8 rounded-full border-2 border-stone-800 border-t-amber-400 animate-spin" />
-              <span className="text-xs text-stone-500 font-semibold uppercase tracking-wider">Refreshing listings...</span>
+              <span className="w-8 h-8 rounded-full border-2 border-white/5 border-t-brand-accent animate-spin" />
+              <span className="text-xs text-[#8a8a8a] font-bold uppercase tracking-wider">Refreshing listings...</span>
             </div>
           ) : resorts.length === 0 ? (
             <div className="text-center py-20 space-y-4">
-              <span className="text-4xl">🏝️</span>
-              <h3 className="text-sm font-semibold text-stone-300 uppercase tracking-wider">No Properties Found</h3>
-              <p className="text-stone-500 text-xs max-w-xs mx-auto">
+              <span className="text-4xl block">🏝️</span>
+              <h3 className="text-sm font-semibold text-white uppercase tracking-wider">No Properties Found</h3>
+              <p className="text-[#8a8a8a] text-xs max-w-xs mx-auto">
                 No resorts match your search criteria. Try filtering by another collection or clear search tags.
               </p>
             </div>
@@ -182,8 +182,8 @@ export default function BookPage() {
                   <div
                     key={r.id}
                     onMouseEnter={() => setSelectedResortId(r.id)}
-                    className={`rounded-3xl border overflow-hidden transition-all duration-350 bg-stone-900/10 ${
-                      isSelected ? 'border-amber-500/25 bg-stone-900/30' : 'border-stone-850 hover:border-stone-800'
+                    className={`rounded-3xl border overflow-hidden transition-all duration-300 bg-[#1A1A1A]/80 backdrop-blur-md ${
+                      isSelected ? 'border-brand-accent/25 bg-[#1A1A1A] shadow-2xl' : 'border-white/5 hover:border-white/10'
                     }`}
                   >
                     {/* Thumbnail Image */}
@@ -193,14 +193,14 @@ export default function BookPage() {
                         alt={r.name}
                         className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
                       
-                      <div className="absolute top-3 left-3 bg-stone-950/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-500/20 text-[9px] font-bold text-amber-400 flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                      <div className="absolute top-3 left-3 bg-[#141414]/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/5 text-[9px] font-bold text-brand-accent flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-brand-accent text-brand-accent" />
                         <span>{r.rating.toFixed(1)}</span>
                       </div>
 
-                      <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[9px] font-bold uppercase text-amber-400 tracking-wider">
+                      <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[9px] font-black uppercase text-brand-accent tracking-wider">
                         <MapPin className="h-3 w-3" />
                         <span>{r.location}</span>
                       </div>
@@ -208,21 +208,21 @@ export default function BookPage() {
 
                     {/* Details content */}
                     <div className="p-5 space-y-3.5">
-                      <h3 className="font-serif text-lg font-bold text-stone-200 line-clamp-1">
+                      <h3 className="font-sans text-lg font-bold text-white line-clamp-1">
                         {r.name}
                       </h3>
-                      <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-2 min-h-[2.5rem]">
+                      <p className="text-[11px] text-[#A0A0A0] leading-relaxed line-clamp-2 min-h-[2.5rem]">
                         {r.description}
                       </p>
                       
-                      <div className="flex items-center justify-between border-t border-stone-850/60 pt-4 text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                      <div className="flex items-center justify-between border-t border-white/5 pt-4 text-[10px] font-bold uppercase tracking-wider text-[#8a8a8a]">
                         <div>
-                          <span className="block text-[8px] text-stone-500 font-semibold uppercase">Standard pricing</span>
-                          <span className="text-amber-400 font-bold">$250 - $850</span>
+                          <span className="block text-[8px] text-[#8a8a8a] font-bold uppercase">Standard pricing</span>
+                          <span className="text-brand-accent font-bold">$250 - $850</span>
                         </div>
                         <Link
                           href={`/book/${r.id}`}
-                          className="rounded-full bg-amber-500 hover:bg-amber-400 px-4.5 py-2 text-stone-950 hover:scale-102 transition-all flex items-center gap-1"
+                          className="rounded-full bg-brand-accent hover:bg-brand-accent-hover px-4.5 py-2 text-white hover:scale-102 transition-all flex items-center gap-1 shadow-lg"
                         >
                           <span>Explore Suites</span>
                           <ArrowRight className="h-3 w-3" />
@@ -237,11 +237,11 @@ export default function BookPage() {
 
           {/* Paginated Controller */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-stone-900 pt-8 text-xs font-semibold text-stone-400 uppercase tracking-wider">
+            <div className="flex items-center justify-between border-t border-white/5 pt-8 text-xs font-semibold text-[#A0A0A0] uppercase tracking-wider select-none">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="rounded-full border border-stone-850 bg-stone-900/25 px-4 py-2 hover:border-stone-800 disabled:opacity-40 flex items-center gap-1 transition-all"
+                className="rounded-full border border-white/5 bg-[#1A1A1A]/80 px-4 py-2 hover:bg-white/5 disabled:opacity-40 flex items-center gap-1 transition-all cursor-pointer"
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span>Prev</span>
@@ -250,7 +250,7 @@ export default function BookPage() {
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="rounded-full border border-stone-850 bg-stone-900/25 px-4 py-2 hover:border-stone-800 disabled:opacity-40 flex items-center gap-1 transition-all"
+                className="rounded-full border border-white/5 bg-[#1A1A1A]/80 px-4 py-2 hover:bg-white/5 disabled:opacity-40 flex items-center gap-1 transition-all cursor-pointer"
               >
                 <span>Next</span>
                 <ChevronRight className="h-4 w-4" />
@@ -261,7 +261,7 @@ export default function BookPage() {
         </div>
 
         {/* RIGHT PANEL: INTERACTIVE STICKY MAP (Hidden on mobile if map toggle is inactive) */}
-        <div className={`w-full md:w-[45%] lg:w-[40%] h-[calc(100vh-170px)] md:sticky md:top-[110px] p-4 sm:p-6 bg-stone-950 md:block ${
+        <div className={`w-full md:w-[45%] lg:w-[40%] h-[calc(100vh-170px)] md:sticky md:top-[110px] p-4 sm:p-6 bg-[#141414] md:block ${
           mobileShowMap ? 'block w-full h-[60vh] sm:h-[65vh]' : 'hidden'
         }`}>
           <ResortMap
@@ -269,7 +269,6 @@ export default function BookPage() {
             selectedResortId={selectedResortId}
             onMarkerClick={(id) => {
               setSelectedResortId(id);
-              // In mobile, we might scroll or center cards
             }}
           />
         </div>
@@ -279,7 +278,7 @@ export default function BookPage() {
       {/* FLOAT MAP TOGGLE BUTTON (Mobile Viewports Only) */}
       <button
         onClick={() => setMobileShowMap(!mobileShowMap)}
-        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 md:hidden rounded-full bg-amber-500 px-6 py-3 font-semibold uppercase text-xs text-stone-950 flex items-center gap-2 shadow-xl shadow-amber-500/20 active:scale-95 transition-all animate-fade-in"
+        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 md:hidden rounded-full bg-brand-accent px-6 py-3 font-semibold uppercase text-xs text-white flex items-center gap-2 shadow-xl shadow-brand-accent/20 active:scale-95 transition-all animate-fade-in cursor-pointer"
       >
         {mobileShowMap ? (
           <>
@@ -293,7 +292,6 @@ export default function BookPage() {
           </>
         )}
       </button>
-
     </div>
   );
 }
