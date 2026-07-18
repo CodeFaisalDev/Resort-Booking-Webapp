@@ -66,10 +66,12 @@ export default function ResortMap({ resorts, selectedResortId, onMarkerClick }: 
 
     // Add markers for all resorts
     resorts.forEach(r => {
-      if (typeof r.latitude !== 'number' || typeof r.longitude !== 'number') return;
+      const lat = Number(r.latitude);
+      const lng = Number(r.longitude);
+      if (isNaN(lat) || isNaN(lng)) return;
       
       const isSelected = r.id === selectedResortId;
-      const marker = L.marker([r.latitude, r.longitude], {
+      const marker = L.marker([lat, lng], {
         icon: isSelected ? activeIcon : defaultIcon
       }).addTo(map);
 
@@ -95,12 +97,22 @@ export default function ResortMap({ resorts, selectedResortId, onMarkerClick }: 
     if (!mapRef.current || !selectedResortId) return;
     const map = mapRef.current;
     
+    // Recalculate dimensions in case the container was hidden or resized
+    map.invalidateSize();
+    
     const selectedResort = resorts.find(r => r.id === selectedResortId);
-    if (selectedResort && typeof selectedResort.latitude === 'number' && typeof selectedResort.longitude === 'number') {
-      map.flyTo([selectedResort.latitude, selectedResort.longitude], 12, {
-        duration: 1.5,
-        easeLinearity: 0.25
-      });
+    const lat = selectedResort ? Number(selectedResort.latitude) : NaN;
+    const lng = selectedResort ? Number(selectedResort.longitude) : NaN;
+    if (!isNaN(lat) && !isNaN(lng)) {
+      const container = map.getContainer();
+      if (container && container.clientWidth > 0 && container.clientHeight > 0) {
+        map.flyTo([lat, lng], 12, {
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
+      } else {
+        map.setView([lat, lng], 12);
+      }
       
       // Update markers icons
       Object.entries(markersRef.current).forEach(([id, marker]) => {

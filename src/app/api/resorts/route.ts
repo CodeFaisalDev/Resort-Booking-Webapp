@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { cache } from '@/lib/cache';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -36,29 +37,58 @@ export async function GET(req: Request) {
     }
   }
 
-  try {
-    const [resorts, total] = await Promise.all([
-      prisma.resort.findMany({
-        where: filter,
-        skip: offset,
-        take: limit,
-        orderBy: { rating: 'desc' },
-        include: {
-          rooms: {
-            include: {
-              roomType: true
-            }
-          }
-        }
-      }),
-      prisma.resort.count({ where: filter })
-    ]);
+  // Unique cache key based on query parameters
+  const cacheKey = `resorts:${page}:${limit}:${query}:${type}`;
 
-    return NextResponse.json({
-      resorts,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit)
+  try {
+    const result = await cache.getOrSet(
+      cacheKey,
+      async () => {
+        const [resorts, total] = await Promise.all([
+          prisma.resort.findMany({
+            where: filter,
+            skip: offset,
+            take: limit,
+            orderBy: { rating: 'desc' },
+            include: {
+              rooms: {
+                include: {
+                  roomType: true
+                }
+              }
+            }
+          }),
+          prisma.resort.count({ where: filter })
+        ]);
+
+        const serializedResorts = resorts.map(resort => ({
+          ...resort,
+          latitude: Number(resort.latitude),
+          longitude: Number(resort.longitude),
+          rooms: resort.rooms.map(room => ({
+            ...room,
+            roomType: {
+              ...room.roomType,
+              basePrice: Number(room.roomType.basePrice)
+            }
+          }))
+        }));
+
+        return {
+          resorts: serializedResorts,
+          total,
+          page,
+          totalPages: Math.ceil(total / limit)
+        };
+      },
+      120 // Cache for 2 minutes — resort data rarely changes
+    );
+
+    // Add CDN cache headers for Vercel Edge Network
+    return NextResponse.json(result, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
     });
   } catch (error) {
     console.error('Error fetching resorts:', error);

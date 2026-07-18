@@ -198,6 +198,9 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
             <img 
               src={resort.images[activeImageIdx] || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=800'} 
               alt={resort.name} 
+              onError={(e) => {
+                e.currentTarget.src = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=800';
+              }}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
@@ -214,6 +217,28 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
                 />
               ))}
             </div>
+          </div>
+
+          {/* Gallery row of small thumbnail images below the slider */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            {resort.images.map((img, idx) => (
+              <div 
+                key={idx}
+                onClick={() => setActiveImageIdx(idx)}
+                className={`relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer border-2 transition-all ${
+                  idx === activeImageIdx ? 'border-brand-accent scale-[0.98]' : 'border-white/5 opacity-60 hover:opacity-100'
+                }`}
+              >
+                <img 
+                  src={img} 
+                  alt={`${resort.name} detail view ${idx + 1}`} 
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=600';
+                  }}
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+            ))}
           </div>
 
           {/* Description */}

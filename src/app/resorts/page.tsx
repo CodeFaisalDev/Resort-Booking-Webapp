@@ -57,12 +57,9 @@ function ResortsBrowseContent() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Filter parameters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-
-  // Accordion details
-  const [expandedResortId, setExpandedResortId] = useState<string | null>(null);
+  const [showAllRooms, setShowAllRooms] = useState(false);
 
   // Sync state from query parameters on mount or query change
   useEffect(() => {
@@ -149,30 +146,44 @@ function ResortsBrowseContent() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-10 relative z-10">
         
         {/* Category Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none justify-center">
-          {[
-            { id: 'all', label: 'All Collections', icon: '🏝️' },
-            { id: 'tropical', label: 'Tropical Beach', icon: '🏖️' },
-            { id: 'alpine', label: 'Alpine Peaks', icon: '🏔️' },
-            { id: 'coastal', label: 'Coastal Cliffs', icon: '🌊' },
-            { id: 'forest', label: 'Forest Eco', icon: '🌲' }
-          ].map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => {
-                setSelectedCategory(cat.id);
-                setPage(1);
-              }}
-              className={`px-5 py-2.5 rounded-full border text-[11px] font-bold uppercase tracking-wider shrink-0 transition-all flex items-center gap-2 cursor-pointer ${
-                selectedCategory === cat.id
-                  ? 'border-brand-accent/35 bg-brand-accent/10 text-brand-accent shadow-lg shadow-brand-accent/5'
-                  : 'border-white/5 bg-[#1A1A1A]/40 text-[#A0A0A0] hover:border-white/10 hover:text-white'
-              }`}
-            >
-              <span>{cat.icon}</span>
-              <span>{cat.label}</span>
-            </button>
-          ))}
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-b border-white/5 pb-6">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none justify-start w-full md:w-auto">
+            {[
+              { id: 'all', label: 'All Collections', icon: '🏝️' },
+              { id: 'tropical', label: 'Tropical Beach', icon: '🏖️' },
+              { id: 'alpine', label: 'Alpine Peaks', icon: '🏔️' },
+              { id: 'coastal', label: 'Coastal Cliffs', icon: '🌊' },
+              { id: 'forest', label: 'Forest Eco', icon: '🌲' }
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  setPage(1);
+                }}
+                className={`px-5 py-2.5 rounded-full border text-[11px] font-bold uppercase tracking-wider shrink-0 transition-all flex items-center gap-2 cursor-pointer ${
+                  selectedCategory === cat.id
+                    ? 'border-brand-accent/35 bg-brand-accent/10 text-brand-accent shadow-lg shadow-brand-accent/5'
+                    : 'border-white/5 bg-[#1A1A1A]/40 text-[#A0A0A0] hover:border-white/10 hover:text-white'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setShowAllRooms(!showAllRooms)}
+            className={`px-6 py-2.5 rounded-full border text-[11px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer shrink-0 border-brand-accent w-full md:w-auto justify-center shadow-lg ${
+              showAllRooms
+                ? 'bg-brand-accent text-white shadow-brand-accent/10'
+                : 'bg-transparent text-brand-accent hover:bg-brand-accent/5'
+            }`}
+          >
+            <Layers className="h-4 w-4" />
+            <span>{showAllRooms ? 'Hide Rooms Globally' : 'Show Rooms Globally'}</span>
+          </button>
         </div>
 
         {/* Results Info */}
@@ -198,14 +209,9 @@ function ResortsBrowseContent() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {resorts.map((r) => {
-              const isExpanded = expandedResortId === r.id;
+              const isExpanded = showAllRooms;
               const cardImage = r.images && r.images.length > 0 ? r.images[0] : 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=600';
               
-              // Get standard pricing info based on room types
-              const prices = r.rooms.map(room => Number(room.roomType.basePrice));
-              const minPrice = prices.length > 0 ? Math.min(...prices) : 250;
-              const maxPrice = prices.length > 0 ? Math.max(...prices) : 850;
-
               return (
                 <div 
                   key={r.id} 
@@ -217,6 +223,9 @@ function ResortsBrowseContent() {
                       <img 
                         src={cardImage} 
                         alt={r.name} 
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=600';
+                        }}
                         className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
@@ -252,7 +261,7 @@ function ResortsBrowseContent() {
                         <ArrowRight className="h-3.5 w-3.5" />
                       </button>
                       <button
-                        onClick={() => setExpandedResortId(isExpanded ? null : r.id)}
+                        onClick={() => setShowAllRooms(!showAllRooms)}
                         className="rounded-full border border-white/5 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase px-4 py-3 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
                       >
                         <Layers className="h-3.5 w-3.5 text-brand-accent" />
@@ -273,7 +282,7 @@ function ResortsBrowseContent() {
                             </div>
                             <div className="text-right">
                               <span className="font-bold text-brand-accent block">${Number(room.roomType.basePrice).toFixed(0)}</span>
-                              <span className="text-[9px] text-[#8a8a8a] block uppercase">Per night</span>
+                              <span className="text-[9px] text-[#8a8a8a] block uppercase font-bold">Per night</span>
                             </div>
                           </div>
                         ))}

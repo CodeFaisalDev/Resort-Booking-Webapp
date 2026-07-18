@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { KeyRound, Mail, User, Shield, Compass } from 'lucide-react';
+import { KeyRound, Mail, User, Shield, Compass, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,9 +13,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [nationality, setNationality] = useState('');
-  const [idProofNum, setIdProofNum] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // States
   const [error, setError] = useState('');
@@ -32,7 +30,7 @@ export default function LoginPage() {
         const res = await fetch('/api/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fullName, email, password, phone, nationality, idProofNum }),
+          body: JSON.stringify({ fullName, email, password }),
         });
         const data = await res.json();
         if (!res.ok) {
@@ -161,70 +159,38 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8a8a8a] mb-1.5">Password</label>
               <div className="relative">
                 <KeyRound className="absolute left-3.5 top-3.5 h-4 w-4 text-stone-500" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-3 pl-10 pr-4 text-sm text-stone-100 placeholder-stone-600 transition-colors"
+                  className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-3 pl-10 pr-12 text-sm text-[#E5E5E5] placeholder-stone-600 transition-colors"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-3.5 text-stone-500 hover:text-stone-300 focus:outline-none cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
-
-            {isSignUp && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8a8a8a] mb-1.5">Phone Number</label>
-                  <input
-                    type="text"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+1 (555) 000-0000"
-                    className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-3 px-4 text-sm text-stone-100 placeholder-stone-600 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8a8a8a] mb-1.5">Nationality</label>
-                  <input
-                    type="text"
-                    required
-                    value={nationality}
-                    onChange={(e) => setNationality(e.target.value)}
-                    placeholder="American"
-                    className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-3 px-4 text-sm text-stone-100 placeholder-stone-600 transition-colors"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8a8a8a] mb-1.5">Passport / ID Number</label>
-                  <div className="relative">
-                    <Shield className="absolute left-3.5 top-3.5 h-4 w-4 text-stone-500" />
-                    <input
-                      type="text"
-                      required
-                      value={idProofNum}
-                      onChange={(e) => setIdProofNum(e.target.value)}
-                      placeholder="Passport ID (e.g. US1234567)"
-                      className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-3 pl-10 pr-4 text-sm text-stone-100 placeholder-stone-600 transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-brand-accent py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-brand-accent-hover transition-all duration-300 shadow-lg cursor-pointer"
+            className={`w-full rounded-xl py-3.5 text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${loading ? 'bg-brand-accent/70 cursor-wait' : 'bg-brand-accent hover:bg-brand-accent-hover cursor-pointer'}`}
           >
-            {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
+            {loading && (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            <span>{loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}</span>
           </button>
         </form>
 

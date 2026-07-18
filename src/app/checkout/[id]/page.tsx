@@ -188,9 +188,13 @@ export default function CheckoutPage() {
               <button
                 onClick={handleSimulatedPayment}
                 disabled={loading}
-                className="w-full rounded-xl bg-brand-accent py-3.5 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-brand-accent-hover transition-all duration-300 flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                className={`w-full rounded-xl py-3.5 text-[10px] font-bold uppercase tracking-widest text-white transition-all duration-300 flex items-center justify-center gap-2 shadow-lg ${loading ? 'bg-brand-accent/70 cursor-wait' : 'bg-brand-accent hover:bg-brand-accent-hover cursor-pointer'}`}
               >
-                <Lock className="h-3.5 w-3.5" />
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Lock className="h-3.5 w-3.5" />
+                )}
                 <span>{loading ? 'Verifying Sandbox Payment...' : 'Complete Simulated Payment'}</span>
               </button>
 

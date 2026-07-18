@@ -46,6 +46,20 @@ export async function POST(req: Request) {
       orderBy: { checkIn: 'desc' }
     });
 
+    let finalReservationId = activeRes?.id;
+    if (!finalReservationId) {
+      const roomRes = await prisma.reservation.findFirst({ where: { roomId } });
+      finalReservationId = roomRes?.id;
+    }
+    if (!finalReservationId) {
+      const anyRes = await prisma.reservation.findFirst();
+      finalReservationId = anyRes?.id;
+    }
+
+    if (!finalReservationId) {
+      return NextResponse.json({ error: 'No reservations exist in the database. Housekeeping requires at least one reservation record to bind to.' }, { status: 400 });
+    }
+
     // Create RoomAssignment
     const assignment = await prisma.roomAssignment.create({
       data: {
@@ -53,22 +67,24 @@ export async function POST(req: Request) {
         staffId,
         taskType,
         status: 'PENDING',
-        // Link to reservation if exists, or create a mock reservation link
-        // Since schema requires reservationId @db.Uuid, we must provide one.
-        // Wait, what if there's no active reservation? We can check if schema requires it.
-        // Yes, schema: reservationId String @map("reservation_id") @db.Uuid
-        // If there's no active reservation, we can query any reservation or find one.
-        // Let's see: we can link it to the guest's reservation or default.
-        // To be safe, we find the latest reservation in the system for this room.
-        reservationId: activeRes ? activeRes.id : (await prisma.reservation.findFirst({ where: { roomId } }))?.id || '',
+        reservationId: finalReservationId
       }
     });
 
-    // Update Room status to DIRTY or MAINTENANCE based on task
-    await prisma.room.update({
-      where: { id: roomId },
-      data: { status: taskType === 'Repair' ? 'MAINTENANCE' : 'DIRTY' }
-    });
+    // Update Room status to DIRTY or MAINTENANCE if relevant to cleanliness or repairs
+    let nextStatus = null;
+    if (taskType === 'Repair') {
+      nextStatus = 'MAINTENANCE';
+    } else if (taskType === 'Turnover Cleaning' || taskType === 'Deep Sweep') {
+      nextStatus = 'DIRTY';
+    }
+
+    if (nextStatus) {
+      await prisma.room.update({
+        where: { id: roomId },
+        data: { status: nextStatus as any }
+      });
+    }
 
     return NextResponse.json({ message: 'Housekeeping task assigned successfully', assignment });
   } catch (error: any) {

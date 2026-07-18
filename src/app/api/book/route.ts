@@ -118,11 +118,17 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).type !== 'guest') {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
     }
 
-    const guestId = (session.user as any).id;
+    const userType = (session.user as any).type;
+    const userRole = (session.user as any).role;
+
+    if (userType !== 'guest' && userType !== 'staff') {
+      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const reservationId = searchParams.get('id');
 
@@ -139,7 +145,8 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Reservation not found.' }, { status: 404 });
     }
 
-    if (reservation.guestId !== guestId) {
+    // Guest users can only delete/cancel their own reservations
+    if (userType === 'guest' && reservation.guestId !== (session.user as any).id) {
       return NextResponse.json({ error: 'Forbidden: You do not own this reservation.' }, { status: 403 });
     }
 
@@ -147,16 +154,18 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Reservation is already canceled.' }, { status: 400 });
     }
 
-    // Check 7-day cancellation boundary
-    const checkInTime = new Date(reservation.checkIn).getTime();
-    const currentTime = Date.now();
-    const timeDiff = checkInTime - currentTime;
-    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    // Check 7-day cancellation boundary only for guests and only if booking is CONFIRMED (paid)
+    if (userType === 'guest' && reservation.status === 'CONFIRMED') {
+      const checkInTime = new Date(reservation.checkIn).getTime();
+      const currentTime = Date.now();
+      const timeDiff = checkInTime - currentTime;
+      const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
 
-    if (timeDiff < sevenDaysInMs) {
-      return NextResponse.json({ 
-        error: 'Cancellation window expired. Bookings can only be canceled at least 7 days before check-in.' 
-      }, { status: 400 });
+      if (timeDiff < sevenDaysInMs) {
+        return NextResponse.json({ 
+          error: 'Cancellation window expired. Paid bookings can only be canceled at least 7 days before check-in.' 
+        }, { status: 400 });
+      }
     }
 
     // Update reservation status and associated payments to REFUNDED
