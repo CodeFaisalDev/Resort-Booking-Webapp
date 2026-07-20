@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     const webhookId = req.headers.get('webhook-id') || '';
     const webhookSignature = req.headers.get('webhook-signature') || '';
     const webhookTimestamp = req.headers.get('webhook-timestamp') || '';
-    const webhookSecret = process.env.DODO_PAYMENTS_WEBHOOK_SECRET || process.env.DODO_WEBHOOK_SECRET;
+    const webhookSecret = process.env.DODO_PAYMENTS_WEBHOOK_SECRET;
 
     // 3. Perform signature verification (only if secret is configured in env)
     if (webhookSecret) {

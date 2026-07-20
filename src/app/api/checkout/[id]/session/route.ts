@@ -29,7 +29,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     // 2. Fetch credentials from environment
-    const apiKey = process.env.DODO_PAYMENTS_API_KEY || process.env.dodo_api_key;
+    const apiKey = process.env.DODO_PAYMENTS_API_KEY;
     const productId = process.env.DODO_PRODUCT_ID;
 
     if (!apiKey) {
