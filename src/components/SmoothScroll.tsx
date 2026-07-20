@@ -15,6 +15,10 @@ export default function SmoothScroll() {
     document.body.style.overflow = 'auto';
     document.body.style.height = 'auto';
 
+    if (pathname?.startsWith('/dashboard')) {
+      return;
+    }
+
     // Register ScrollTrigger if not already done
     gsap.registerPlugin(ScrollTrigger);
 
