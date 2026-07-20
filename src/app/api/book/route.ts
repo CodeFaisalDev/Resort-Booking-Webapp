@@ -247,6 +247,61 @@ export async function DELETE(req: Request) {
       }
     }
 
+    // Retrieve completed payments
+    const completedPayment = reservation.payments.find(p => p.status === 'COMPLETED');
+    let refundSuccessful = false;
+    let refundErrorMsg = '';
+
+    if (reservation.status === 'CONFIRMED') {
+      if (completedPayment) {
+        // Extract payment ID from `method` string: e.g. "Dodo Payments (ID: pay_abc123)"
+        let dodoPaymentId = '';
+        if (completedPayment.method.includes('ID: ')) {
+          dodoPaymentId = completedPayment.method.split('ID: ')[1].replace(')', '').trim();
+        }
+
+        if (dodoPaymentId && process.env.DODO_PAYMENTS_API_KEY) {
+          try {
+            const amountInCents = Math.round(Number(reservation.totalAmount) * 100);
+            const refundRes = await fetch('https://test.dodopayments.com/refunds', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${process.env.DODO_PAYMENTS_API_KEY.trim()}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                payment_id: dodoPaymentId,
+                amount: amountInCents,
+                reason: 'Customer requested cancellation'
+              })
+            });
+
+            const refundData = await refundRes.json();
+            if (refundRes.ok) {
+              refundSuccessful = true;
+            } else {
+              console.error('Dodo Refund Failed:', refundData);
+              refundErrorMsg = refundData.message || 'Dodo Payments Refund API rejected the request.';
+            }
+          } catch (e: any) {
+            console.error('Dodo Refund Request Error:', e);
+            refundErrorMsg = e.message || 'Network error connecting to Dodo Payments Refund API.';
+          }
+        } else {
+          refundErrorMsg = 'Dodo Payments API Key or Payment ID not found.';
+        }
+
+        if (!refundSuccessful) {
+          return NextResponse.json({ 
+            error: `Unable to process automated refund via Dodo Payments: ${refundErrorMsg}. Please contact support.` 
+          }, { status: 500 });
+        }
+      } else {
+        // If it's a seed or bypass booking without payment, allow cancellation anyway
+        console.warn('Canceled reservation marked CONFIRMED but no COMPLETED payment record was found in DB.');
+      }
+    }
+
     // Update reservation status and associated payments to REFUNDED
     const updated = await prisma.$transaction(async (tx) => {
       const res = await tx.reservation.update({

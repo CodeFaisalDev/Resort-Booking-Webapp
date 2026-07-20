@@ -48,12 +48,7 @@ export default function CheckoutPage() {
   const [completed, setCompleted] = useState(false);
   const [checkingPayment, setCheckingPayment] = useState(false);
 
-  // Form Billing States
-  const [billingAddress, setBillingAddress] = useState('');
-  const [billingCity, setBillingCity] = useState('');
-  const [billingState, setBillingState] = useState('');
-  const [billingZip, setBillingZip] = useState('');
-  const [billingCountry, setBillingCountry] = useState('Maldives');
+  // Form Phone State
   const [guestPhone, setGuestPhone] = useState('');
 
   // 1. Fetch Reservation Details
@@ -65,12 +60,6 @@ export default function CheckoutPage() {
         if (res.ok) {
           setResDetails(data);
           
-          // Prefill billing address states if already available
-          setBillingAddress(data.billingAddress || '');
-          setBillingCity(data.billingCity || '');
-          setBillingState(data.billingState || '');
-          setBillingZip(data.billingZip || '');
-          setBillingCountry(data.billingCountry || 'Maldives');
           setGuestPhone(data.guest?.phone || '');
 
           if (data.status === 'CONFIRMED') {
@@ -127,11 +116,6 @@ export default function CheckoutPage() {
   const handleDodoPayment = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!billingAddress || !billingCity || !billingState || !billingZip || !billingCountry) {
-      setError('Please fill in all required billing address fields.');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
@@ -142,11 +126,6 @@ export default function CheckoutPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          billingAddress,
-          billingCity,
-          billingState,
-          billingZip,
-          billingCountry,
           guestPhone
         })
       });
@@ -277,80 +256,7 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Billing Address Input */}
-                <div className="bg-[#1A1A1A]/80 backdrop-blur-md p-6 rounded-3xl border border-white/5 shadow-2xl space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-white border-b border-white/5 pb-2">2. Billing Address</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-[9px] font-bold uppercase tracking-wider text-[#8a8a8a] mb-1.5">Street Address*</label>
-                      <input
-                        type="text"
-                        required
-                        value={billingAddress}
-                        onChange={(e) => setBillingAddress(e.target.value)}
-                        placeholder="e.g. 102 Luxury Boulevard"
-                        className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-2.5 px-3.5 text-xs text-white placeholder-stone-600 transition-colors font-semibold"
-                      />
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[9px] font-bold uppercase tracking-wider text-[#8a8a8a] mb-1.5">City*</label>
-                        <input
-                          type="text"
-                          required
-                          value={billingCity}
-                          onChange={(e) => setBillingCity(e.target.value)}
-                          placeholder="e.g. Male"
-                          className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-2.5 px-3.5 text-xs text-white placeholder-stone-600 transition-colors font-semibold"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-bold uppercase tracking-wider text-[#8a8a8a] mb-1.5">State / Province*</label>
-                        <input
-                          type="text"
-                          required
-                          value={billingState}
-                          onChange={(e) => setBillingState(e.target.value)}
-                          placeholder="e.g. Kaafu Atoll"
-                          className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-2.5 px-3.5 text-xs text-white placeholder-stone-600 transition-colors font-semibold"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-bold uppercase tracking-wider text-[#8a8a8a] mb-1.5">ZIP / Postal Code*</label>
-                        <input
-                          type="text"
-                          required
-                          value={billingZip}
-                          onChange={(e) => setBillingZip(e.target.value)}
-                          placeholder="e.g. 20002"
-                          className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-2.5 px-3.5 text-xs text-white placeholder-stone-600 transition-colors font-semibold"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-bold uppercase tracking-wider text-[#8a8a8a] mb-1.5">Country*</label>
-                        <select
-                          required
-                          value={billingCountry}
-                          onChange={(e) => setBillingCountry(e.target.value)}
-                          className="w-full rounded-xl bg-white/5 border border-white/5 focus:border-brand-accent focus:bg-white/10 focus:outline-none py-2.5 px-3.5 text-xs text-white transition-colors font-semibold"
-                        >
-                          <option className="bg-[#141414] text-white" value="Maldives">Maldives</option>
-                          <option className="bg-[#141414] text-white" value="Indonesia">Indonesia</option>
-                          <option className="bg-[#141414] text-white" value="United States">United States</option>
-                          <option className="bg-[#141414] text-white" value="Canada">Canada</option>
-                          <option className="bg-[#141414] text-white" value="United Kingdom">United Kingdom</option>
-                          <option className="bg-[#141414] text-white" value="Germany">Germany</option>
-                          <option className="bg-[#141414] text-white" value="France">France</option>
-                          <option className="bg-[#141414] text-white" value="Japan">Japan</option>
-                          <option className="bg-[#141414] text-white" value="Australia">Australia</option>
-                          <option className="bg-[#141414] text-white" value="Switzerland">Switzerland</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
               </div>
 

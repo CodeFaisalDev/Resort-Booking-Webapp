@@ -228,6 +228,58 @@ export async function PUT(req: Request) {
 
       const newCheckOutDate = new Date(checkInTime + (nightsStayed * msPerDay));
 
+      // Process Dodo Payments partial refund
+      const completedPayment = reservation.payments.find(p => p.status === 'COMPLETED');
+      let refundSuccessful = false;
+      let refundErrorMsg = '';
+
+      if (completedPayment) {
+        // Extract payment ID from `method` string: e.g. "Dodo Payments (ID: pay_abc123)"
+        let dodoPaymentId = '';
+        if (completedPayment.method.includes('ID: ')) {
+          dodoPaymentId = completedPayment.method.split('ID: ')[1].replace(')', '').trim();
+        }
+
+        if (dodoPaymentId && process.env.DODO_PAYMENTS_API_KEY) {
+          try {
+            const refundAmountCents = Math.round(refundAmount * 100);
+            const refundRes = await fetch('https://test.dodopayments.com/refunds', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${process.env.DODO_PAYMENTS_API_KEY.trim()}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                payment_id: dodoPaymentId,
+                amount: refundAmountCents,
+                reason: 'Mid-stay duration truncation refund'
+              })
+            });
+
+            const refundData = await refundRes.json();
+            if (refundRes.ok) {
+              refundSuccessful = true;
+            } else {
+              console.error('Dodo Mid-stay Refund Failed:', refundData);
+              refundErrorMsg = refundData.message || 'Dodo Payments Refund API rejected the request.';
+            }
+          } catch (e: any) {
+            console.error('Dodo Mid-stay Refund Request Error:', e);
+            refundErrorMsg = e.message || 'Network error connecting to Dodo Payments Refund API.';
+          }
+        } else {
+          refundErrorMsg = 'Dodo Payments API Key or Payment ID not found.';
+        }
+
+        if (!refundSuccessful) {
+          return NextResponse.json({ 
+            error: `Unable to process automated mid-stay refund via Dodo Payments: ${refundErrorMsg}` 
+          }, { status: 500 });
+        }
+      } else {
+        console.warn('Mid-stay cancel requested but no COMPLETED payment record was found in DB.');
+      }
+
       // Update DB in a transaction
       await prisma.$transaction(async (tx) => {
         // 1. Update reservation dates, status and amount

@@ -241,6 +241,9 @@ export async function POST(req: Request) {
         data: { status: 'REFUNDED' }
       });
 
+      // Get exact refund amount from webhook payload, fallback to database reservation total
+      const refundAmount = (eventData.amount || Math.round(Number(updatedRes.totalAmount) * 100)) / 100;
+
       // Send Refund Email
       try {
         const checkInFormatted = new Date(updatedRes.checkIn).toLocaleDateString();
@@ -264,7 +267,7 @@ export async function POST(req: Request) {
 
             <div style="border-top: 1px solid #292524; padding-top: 15px; margin-top: 25px; display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
               <span style="color: #a8a29e;">Amount Credited:</span>
-              <span style="color: #f87171;">\$${Number(updatedRes.totalAmount).toFixed(2)}</span>
+              <span style="color: #f87171;">\$${refundAmount.toFixed(2)}</span>
             </div>
 
             <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
