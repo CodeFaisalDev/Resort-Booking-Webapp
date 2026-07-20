@@ -182,7 +182,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .leaflet-container .leaflet-tile-container {
-  filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(85%) saturate(70%);
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) saturate(140%);
 }
 .leaflet-bar {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -224,4 +224,169 @@
 }
 .animate-modal-zoom {
   animation: modalZoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK-THEMED NATIVE FORM CONTROLS
+   All <select>, <option>, <input[type=date]> and browser-default
+   date/time picker chrome are styled here globally.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Select dropdowns ── */
+select {
+  color-scheme: dark;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #E5E5E5;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.65rem 2rem 0.65rem 0.75rem;
+  font-size: 0.75rem;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+select:focus {
+  border-color: var(--primary);
+  background-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 2px rgba(185, 120, 79, 0.15);
+}
+
+select:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Option elements (browser dropdown list) ── */
+option {
+  background-color: #1A1A1A;
+  color: #E5E5E5;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+option:checked,
+option:hover {
+  background-color: #2C2C2C;
+  color: #B9784F;
+}
+
+/* ── Date / time / datetime-local inputs ── */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"] {
+  color-scheme: dark;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #E5E5E5;
+  font-weight: 600;
+  font-size: 0.75rem;
+  border-radius: 0.75rem;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  cursor: pointer;
+}
+
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="datetime-local"]:focus,
+input[type="month"]:focus,
+input[type="week"]:focus {
+  border-color: var(--primary);
+  background-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 2px rgba(185, 120, 79, 0.15);
+}
+
+input[type="date"]:hover,
+input[type="time"]:hover,
+input[type="datetime-local"]:hover,
+input[type="month"]:hover,
+input[type="week"]:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Webkit calendar picker icon (Chrome/Edge/Safari) */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator,
+input[type="week"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) sepia(0.3) saturate(2) hue-rotate(340deg);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover,
+input[type="week"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Webkit inner spin button (number/date steppers) */
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button {
+  filter: invert(0.7);
+}
+
+/* Range slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid #141414;
+  box-shadow: 0 0 8px rgba(185, 120, 79, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 12px rgba(185, 120, 79, 0.6);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid #141414;
+  box-shadow: 0 0 8px rgba(185, 120, 79, 0.4);
+  cursor: pointer;
+}
+
+/* ── Number input ── */
+input[type="number"] {
+  color-scheme: dark;
+}
+
+/* ── Checkbox / Radio (for completeness) ── */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--primary);
+  cursor: pointer;
 }

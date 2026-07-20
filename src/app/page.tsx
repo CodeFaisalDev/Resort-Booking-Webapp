@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { ResortGridSkeleton } from '@/components/SkeletonLoaders';
 
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -938,7 +939,7 @@ export default function HomePage() {
                 <div className="absolute top-[110%] left-0 w-full lg:w-[320px] bg-[#1A1A1A]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl p-4 z-50 text-left"
                   onClick={(e) => e.stopPropagation()}>
                   <span className="block text-[10px] font-bold text-[#8a8a8a] uppercase tracking-wider mb-2.5 px-1">Suggestions</span>
-                  <div className="flex flex-col gap-1 max-h-[220px] overflow-y-auto scrollbar-none">
+                  <div data-lenis-prevent className="flex flex-col gap-1 max-h-[220px] overflow-y-auto scrollbar-none">
                     {getSuggestions().map((item, idx) => (
                       <button key={idx} type="button"
                         onClick={(e) => { e.stopPropagation(); setSearchPlace(item.name); setIsDestDropdownOpen(false); }}
@@ -1083,10 +1084,7 @@ export default function HomePage() {
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 space-y-3">
-              <Loader2 className="h-8 w-8 text-brand-accent animate-spin" />
-              <span className="text-xs text-[#8a8a8a] font-semibold animate-pulse">Loading stays...</span>
-            </div>
+            <ResortGridSkeleton count={3} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 text-left">
               

@@ -35,8 +35,8 @@ export default function ResortMap({ resorts, selectedResortId, onMarkerClick }: 
       // Add zoom control at bottom-right
       L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
 
-      // Add elegant dark theme tiles (CartoDB Dark Matter)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // Add colorful Voyager tiles (which we invert/color-shift in CSS to create a colored dark-mode map)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
         subdomains: 'abcd',
         maxZoom: 20
