@@ -37,6 +37,7 @@ export const authOptions: AuthOptions = {
             where: { email }
           });
           if (guest && bcrypt.compareSync(password, guest.password)) {
+            if (!guest.isVerified) return null;
             return {
               id: guest.id,
               name: guest.fullName,

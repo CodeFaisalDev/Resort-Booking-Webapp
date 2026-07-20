@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { sendMail } from '@/lib/mailer';
 
 // GET: Retrieve all reservations for the admin panel
 export async function GET() {
@@ -57,7 +58,16 @@ export async function PUT(req: Request) {
 
     const reservation = await prisma.reservation.findUnique({
       where: { id: reservationId },
-      include: { room: { include: { roomType: true } }, payments: true }
+      include: { 
+        guest: true,
+        room: { 
+          include: { 
+            roomType: true,
+            resort: true
+          } 
+        }, 
+        payments: true 
+      }
     });
 
     if (!reservation) {
@@ -84,6 +94,51 @@ export async function PUT(req: Request) {
         });
       });
 
+      // Send Welcome/Check-in Email
+      try {
+        const checkInFormatted = new Date(reservation.checkIn).toLocaleDateString();
+        const checkOutFormatted = new Date(reservation.checkOut).toLocaleDateString();
+
+        const htmlBody = `
+          <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #fbbf24; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+            <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Check-in Confirmed & Welcome</p>
+            <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+            
+            <p>Dear <strong>${reservation.guest.fullName}</strong>,</p>
+            <p>Welcome to **${reservation.room.resort.name}**! We are pleased to confirm that you have been checked in. Your stay with us is now active.</p>
+            
+            <div style="background-color: #1c1917; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #292524;">
+              <p style="margin: 5px 0;"><strong>Room Allocated:</strong> Suite ${reservation.room.roomNum} (${reservation.room.roomType.name})</p>
+              <p style="margin: 5px 0;"><strong>Floor:</strong> ${reservation.room.floor}</p>
+              <p style="margin: 5px 0;"><strong>Stay Schedule:</strong> ${checkInFormatted} - ${checkOutFormatted}</p>
+            </div>
+
+            <p>If you require in-room dining, room cleaning, or customized experiences, please reach out to the front desk or use your dashboard services panel.</p>
+
+            <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #78716c; text-align: center;">
+              Enjoy your stay at Luxury Horizon Resort.
+            </p>
+          </div>
+        `;
+
+        await sendMail({
+          to: reservation.guest.email,
+          subject: 'Check-In Confirmed - Welcome to Luxury Horizon',
+          html: htmlBody,
+        });
+
+        const staffEmail = process.env.TO_EMAIL || 'code.faisal.dev@gmail.com';
+        await sendMail({
+          to: staffEmail,
+          subject: `[Staff Notification] Check-In Registered - ${reservation.guest.fullName} (Room ${reservation.room.roomNum})`,
+          html: htmlBody,
+        });
+      } catch (err) {
+        console.error('Failed to send check-in email:', err);
+      }
+
       return NextResponse.json({ message: 'Guest checked in successfully.' });
     }
 
@@ -96,6 +151,42 @@ export async function PUT(req: Request) {
           data: { status: 'DIRTY' }
         });
       });
+
+      // Send Checkout Email
+      try {
+        const htmlBody = `
+          <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #78716c; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+            <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Check-out Complete</p>
+            <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+            
+            <p>Dear <strong>${reservation.guest.fullName}</strong>,</p>
+            <p>Thank you for choosing to stay with us at **${reservation.room.resort.name}**. Your checkout is complete, and your room has been successfully released.</p>
+            
+            <p>We hope you had an extraordinary stay. We wish you safe travels on your journey home and look forward to welcoming you back to our resorts soon.</p>
+
+            <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #78716c; text-align: center;">
+              Concierge services: concierge@luxuryhorizon.com. We hope to see you again soon.
+            </p>
+          </div>
+        `;
+
+        await sendMail({
+          to: reservation.guest.email,
+          subject: 'Thank You for Staying at Luxury Horizon - Checkout Complete',
+          html: htmlBody,
+        });
+
+        const staffEmail = process.env.TO_EMAIL || 'code.faisal.dev@gmail.com';
+        await sendMail({
+          to: staffEmail,
+          subject: `[Staff Notification] Checkout Completed - ${reservation.guest.fullName} (Room ${reservation.room.roomNum})`,
+          html: htmlBody,
+        });
+      } catch (err) {
+        console.error('Failed to send checkout email:', err);
+      }
 
       return NextResponse.json({ message: 'Guest checked out successfully. Room released to DIRTY.' });
     }
@@ -177,6 +268,55 @@ export async function PUT(req: Request) {
           });
         }
       });
+
+      // Send Prorated Refund Email
+      try {
+        const checkInFormatted = new Date(reservation.checkIn).toLocaleDateString();
+        const checkOutFormatted = new Date(newCheckOutDate).toLocaleDateString();
+
+        const htmlBody = `
+          <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #f87171; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+            <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Prorated Stay & Refund Confirmation</p>
+            <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+            
+            <p>Dear <strong>${reservation.guest.fullName}</strong>,</p>
+            <p>An administrator has updated your stay duration at **${reservation.room.resort.name}**. Your stay has been truncated, and a prorated refund has been issued.</p>
+            
+            <div style="background-color: #1c1917; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #292524;">
+              <p style="margin: 5px 0;"><strong>Active Nights Stayed:</strong> ${nightsStayed} Night${nightsStayed > 1 ? 's' : ''}</p>
+              <p style="margin: 5px 0;"><strong>Nights Refunded:</strong> ${remainingNights} Night${remainingNights > 1 ? 's' : ''}</p>
+              <p style="margin: 5px 0;"><strong>Updated Schedule:</strong> ${checkInFormatted} - ${checkOutFormatted}</p>
+              <p style="margin: 5px 0;"><strong>Stay Cost Charged:</strong> \$${proratedTotal.toFixed(2)}</p>
+            </div>
+
+            <div style="border-top: 1px solid #292524; padding-top: 15px; margin-top: 25px; display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
+              <span style="color: #a8a29e;">Amount Refunded:</span>
+              <span style="color: #f87171;">\$${refundAmount.toFixed(2)}</span>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #78716c; text-align: center;">
+              Refunds typically take 5-10 business days. For concierge assistance, email concierge@luxuryhorizon.com.
+            </p>
+          </div>
+        `;
+
+        await sendMail({
+          to: reservation.guest.email,
+          subject: 'Stay Duration Truncated & Refunded - Luxury Horizon Resort',
+          html: htmlBody,
+        });
+
+        const staffEmail = process.env.TO_EMAIL || 'code.faisal.dev@gmail.com';
+        await sendMail({
+          to: staffEmail,
+          subject: `[Staff Notification] Stay Truncated & Refund Issued - ${reservation.guest.fullName}`,
+          html: htmlBody,
+        });
+      } catch (err) {
+        console.error('Failed to send mid-stay cancel email:', err);
+      }
 
       return NextResponse.json({
         message: 'Mid-stay cancellation completed successfully.',

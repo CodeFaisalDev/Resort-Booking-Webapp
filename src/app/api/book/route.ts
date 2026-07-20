@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { sendMail } from '@/lib/mailer';
 
 export async function POST(req: Request) {
   try {
@@ -103,7 +104,85 @@ export async function POST(req: Request) {
           create: servicesPayload,
         },
       },
+      include: {
+        guest: true,
+        room: {
+          include: {
+            resort: true,
+            roomType: true
+          }
+        },
+        reservationServices: {
+          include: { service: true }
+        }
+      }
     });
+
+    // Send Reservation Initialized Email
+    try {
+      const checkInFormatted = new Date(reservation.checkIn).toLocaleDateString();
+      const checkOutFormatted = new Date(reservation.checkOut).toLocaleDateString();
+      const servicesListHtml = reservation.reservationServices.map(rs => 
+        `<li>${rs.service.name}: \$${Number(rs.subtotal).toFixed(2)}</li>`
+      ).join('');
+
+      const htmlBody = `
+        <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #78350f; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+          <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Provisional Stay Reservation</p>
+          <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+          
+          <p>Dear <strong>${reservation.guest.fullName}</strong>,</p>
+          <p>Your stay stay at Luxury Horizon Resort has been provisionally reserved. Please complete your payment details using the checkout link below to guarantee your accommodation.</p>
+          
+          <div style="background-color: #1c1917; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #292524;">
+            <p style="margin: 5px 0;"><strong>Resort:</strong> ${reservation.room.resort.name} (${reservation.room.resort.location})</p>
+            <p style="margin: 5px 0;"><strong>Suite Category:</strong> ${reservation.room.roomType.name}</p>
+            <p style="margin: 5px 0;"><strong>Assigned Room:</strong> Room ${reservation.room.roomNum}</p>
+            <p style="margin: 5px 0;"><strong>Stay Schedule:</strong> ${checkInFormatted} - ${checkOutFormatted} (${nights} night${nights > 1 ? 's' : ''})</p>
+          </div>
+
+          ${reservation.reservationServices.length > 0 ? `
+            <h4 style="color: #fbbf24; margin-bottom: 5px;">Provisional Services Add-Ons:</h4>
+            <ul style="padding-left: 20px; margin-top: 0; color: #d6d3d1;">
+              ${servicesListHtml}
+            </ul>
+          ` : ''}
+
+          <div style="border-top: 1px solid #292524; padding-top: 15px; margin-top: 25px; display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
+            <span style="color: #a8a29e;">Amount Due:</span>
+            <span style="color: #fbbf24;">\$${Number(reservation.totalAmount).toFixed(2)}</span>
+          </div>
+
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/checkout/${reservation.id}" 
+               style="background-color: #fbbf24; color: #0c0a09; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; display: inline-block;">
+              Proceed to Secure Checkout
+            </a>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+          <p style="font-size: 12px; color: #78716c; text-align: center;">
+            This draft reservation will automatically hold the room. Please complete the check-out flow to secure your booking.
+          </p>
+        </div>
+      `;
+
+      await sendMail({
+        to: reservation.guest.email,
+        subject: 'Stay Reservation Pending - Luxury Horizon Resort',
+        html: htmlBody,
+      });
+
+      const staffEmail = process.env.TO_EMAIL || 'code.faisal.dev@gmail.com';
+      await sendMail({
+        to: staffEmail,
+        subject: `[Staff Notification] Stay Reserved (Pending Payment) - ${reservation.guest.fullName}`,
+        html: htmlBody,
+      });
+    } catch (err) {
+      console.error('Failed to send reservation pending email:', err);
+    }
 
     return NextResponse.json({
       message: 'Draft reservation created successfully',
@@ -172,7 +251,16 @@ export async function DELETE(req: Request) {
     const updated = await prisma.$transaction(async (tx) => {
       const res = await tx.reservation.update({
         where: { id: reservationId },
-        data: { status: 'CANCELED' }
+        data: { status: 'CANCELED' },
+        include: {
+          guest: true,
+          room: {
+            include: {
+              resort: true,
+              roomType: true
+            }
+          }
+        }
       });
 
       // Update associated payments to REFUNDED
@@ -183,6 +271,55 @@ export async function DELETE(req: Request) {
 
       return res;
     });
+
+    // Send Cancellation Email
+    try {
+      const checkInFormatted = new Date(updated.checkIn).toLocaleDateString();
+      const checkOutFormatted = new Date(updated.checkOut).toLocaleDateString();
+
+      const htmlBody = `
+        <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #f87171; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #f87171; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+          <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Reservation Canceled & Refund Confirmation</p>
+          <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+          
+          <p>Dear <strong>${updated.guest.fullName}</strong>,</p>
+          <p>We are writing to confirm that your stay reservation has been successfully **canceled**. Any payments made have been flagged for refund processing back to your original source card.</p>
+          
+          <div style="background-color: #1c1917; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #292524;">
+            <p style="margin: 5px 0;"><strong>Reservation ID:</strong> ${updated.id}</p>
+            <p style="margin: 5px 0;"><strong>Resort:</strong> ${updated.room.resort.name} (${updated.room.resort.location})</p>
+            <p style="margin: 5px 0;"><strong>Suite Category:</strong> ${updated.room.roomType.name}</p>
+            <p style="margin: 5px 0;"><strong>Stay Schedule:</strong> ${checkInFormatted} - ${checkOutFormatted}</p>
+          </div>
+
+          <div style="border-top: 1px solid #292524; padding-top: 15px; margin-top: 25px; display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
+            <span style="color: #a8a29e;">Amount Refunded:</span>
+            <span style="color: #f87171;">\$${Number(updated.totalAmount).toFixed(2)}</span>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+          <p style="font-size: 12px; color: #78716c; text-align: center;">
+            Refund processing times can vary depending on your bank (usually 5-10 business days). If you have questions, please reach out to reservations@luxuryhorizon.com.
+          </p>
+        </div>
+      `;
+
+      await sendMail({
+        to: updated.guest.email,
+        subject: 'Stay Canceled & Refunded - Luxury Horizon Resort',
+        html: htmlBody,
+      });
+
+      const staffEmail = process.env.TO_EMAIL || 'code.faisal.dev@gmail.com';
+      await sendMail({
+        to: staffEmail,
+        subject: `[Staff Notification] Stay CANCELED & Refunded - ${updated.guest.fullName}`,
+        html: htmlBody,
+      });
+    } catch (err) {
+      console.error('Failed to send reservation cancellation email:', err);
+    }
 
     return NextResponse.json({
       message: 'Reservation canceled and refunded successfully.',

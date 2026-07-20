@@ -28,7 +28,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: 'This reservation has been canceled.' }, { status: 400 });
     }
 
-    // 2. Fetch credentials from environment
+    // 2. Extract and validate billing parameter details
+    const body = await req.json().catch(() => ({}));
+    const { billingAddress, billingCity, billingState, billingZip, billingCountry } = body;
+
+    if (!billingAddress || !billingCity || !billingState || !billingZip || !billingCountry) {
+      return NextResponse.json({ error: 'Missing billing details. Please complete the address form.' }, { status: 400 });
+    }
+
+    // Update billing details on reservation record
+    await prisma.reservation.update({
+      where: { id },
+      data: {
+        billingAddress,
+        billingCity,
+        billingState,
+        billingZip,
+        billingCountry
+      }
+    });
+
+    // 3. Fetch credentials from environment
     const apiKey = process.env.DODO_PAYMENTS_API_KEY;
     const productId = process.env.DODO_PRODUCT_ID;
 

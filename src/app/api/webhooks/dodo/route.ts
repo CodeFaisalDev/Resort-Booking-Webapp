@@ -170,6 +170,16 @@ export async function POST(req: Request) {
             <p style="margin: 5px 0;"><strong>Guests Registered:</strong> ${reservation.numGuests}</p>
           </div>
 
+          ${reservation.billingAddress ? `
+          <h4 style="color: #fbbf24; margin-bottom: 5px;">Billing Details:</h4>
+          <div style="background-color: #1c1917; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #292524; color: #d6d3d1; font-size: 13px;">
+            <p style="margin: 3px 0;"><strong>${reservation.guest.fullName}</strong></p>
+            <p style="margin: 3px 0;">${reservation.billingAddress}</p>
+            <p style="margin: 3px 0;">${reservation.billingCity}, ${reservation.billingState} ${reservation.billingZip}</p>
+            <p style="margin: 3px 0;">${reservation.billingCountry}</p>
+          </div>
+          ` : ''}
+
           ${reservation.reservationServices.length > 0 ? `
             <h4 style="color: #fbbf24; margin-bottom: 5px;">Requested Add-On Services:</h4>
             <ul style="padding-left: 20px; margin-top: 0; color: #d6d3d1;">
@@ -211,9 +221,18 @@ export async function POST(req: Request) {
     // 7. Handle successful refund
     else if (eventType === 'refund.succeeded') {
       // Update reservation status to CANCELED
-      await prisma.reservation.update({
+      const updatedRes = await prisma.reservation.update({
         where: { id: reservationId },
-        data: { status: 'CANCELED' }
+        data: { status: 'CANCELED' },
+        include: {
+          guest: true,
+          room: {
+            include: {
+              resort: true,
+              roomType: true
+            }
+          }
+        }
       });
 
       // Update associated payments to REFUNDED
@@ -221,6 +240,55 @@ export async function POST(req: Request) {
         where: { reservationId },
         data: { status: 'REFUNDED' }
       });
+
+      // Send Refund Email
+      try {
+        const checkInFormatted = new Date(updatedRes.checkIn).toLocaleDateString();
+        const checkOutFormatted = new Date(updatedRes.checkOut).toLocaleDateString();
+
+        const htmlBody = `
+          <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #f87171; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #f87171; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+            <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Refund Confirmation</p>
+            <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+            
+            <p>Dear <strong>${updatedRes.guest.fullName}</strong>,</p>
+            <p>This email confirms that a refund has been successfully processed back to your card for your canceled reservation.</p>
+            
+            <div style="background-color: #1c1917; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #292524;">
+              <p style="margin: 5px 0;"><strong>Reservation ID:</strong> ${updatedRes.id}</p>
+              <p style="margin: 5px 0;"><strong>Resort:</strong> ${updatedRes.room.resort.name} (${updatedRes.room.resort.location})</p>
+              <p style="margin: 5px 0;"><strong>Suite Category:</strong> ${updatedRes.room.roomType.name}</p>
+              <p style="margin: 5px 0;"><strong>Stay Schedule:</strong> ${checkInFormatted} - ${checkOutFormatted}</p>
+            </div>
+
+            <div style="border-top: 1px solid #292524; padding-top: 15px; margin-top: 25px; display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
+              <span style="color: #a8a29e;">Amount Credited:</span>
+              <span style="color: #f87171;">\$${Number(updatedRes.totalAmount).toFixed(2)}</span>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #78716c; text-align: center;">
+              If you have any questions, please contact concierge@luxuryhorizon.com.
+            </p>
+          </div>
+        `;
+
+        await sendMail({
+          to: updatedRes.guest.email,
+          subject: 'Refund Processed successfully - Luxury Horizon Resort',
+          html: htmlBody,
+        });
+
+        const staffEmail = process.env.TO_EMAIL || 'code.faisal.dev@gmail.com';
+        await sendMail({
+          to: staffEmail,
+          subject: `[Staff Notification] Refund Processed - ${updatedRes.guest.fullName}`,
+          html: htmlBody,
+        });
+      } catch (err) {
+        console.error('Failed to send webhook refund confirmation email:', err);
+      }
 
       console.log(`Reservation ${reservationId} marked canceled and refunded via webhook.`);
     }
