@@ -30,7 +30,7 @@ export async function GET() {
 
     // 3. Room listings
     const rooms = await prisma.room.findMany({
-      include: { roomType: true },
+      include: { roomType: true, resort: true },
       orderBy: { roomNum: 'asc' }
     });
 
