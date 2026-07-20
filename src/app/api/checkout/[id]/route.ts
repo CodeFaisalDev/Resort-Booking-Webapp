@@ -24,6 +24,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       totalAmount: res.totalAmount,
       roomNum: res.room.roomNum,
       roomTypeName: res.room.roomType.name,
+      status: res.status,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

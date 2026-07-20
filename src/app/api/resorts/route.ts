@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { cache } from '@/lib/cache';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -93,5 +95,46 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error('Error fetching resorts:', error);
     return NextResponse.json({ error: 'Failed to load resorts.' }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    // 1. Authorize session (must be admin)
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any).type !== 'staff' || (session.user as any).role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
+    }
+
+    // 2. Extract and validate payload parameters
+    const { name, description, location, latitude, longitude, images, rating } = await req.json();
+
+    if (!name || !description || !location || latitude === undefined || longitude === undefined) {
+      return NextResponse.json({ error: 'Missing required parameters (name, description, location, latitude, longitude).' }, { status: 400 });
+    }
+
+    // 3. Create the new resort record
+    const newResort = await prisma.resort.create({
+      data: {
+        name,
+        description,
+        location,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+        images: Array.isArray(images) ? images : [],
+        rating: rating !== undefined ? parseFloat(rating) : 5.0
+      }
+    });
+
+    // 4. Invalidate all stale resort cache entries
+    cache.invalidatePrefix('resorts');
+
+    return NextResponse.json({
+      message: 'Resort registered successfully.',
+      resort: newResort
+    });
+  } catch (error: any) {
+    console.error('Create Resort API Error:', error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

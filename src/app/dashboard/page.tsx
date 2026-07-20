@@ -37,7 +37,7 @@ export default function DashboardPage() {
   }, [status, router]);
 
   // Active sub-tab for Admin
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'rooms' | 'depts' | 'staff' | 'finance' | 'audits'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'rooms' | 'depts' | 'staff' | 'finance' | 'audits' | 'resorts'>('overview');
 
   // Loading & base state data
   const [guestData, setGuestData] = useState<any>(null);
@@ -94,6 +94,112 @@ export default function DashboardPage() {
   const [staffMsg, setStaffMsg] = useState('');
   const [staffLoading, setStaffLoading] = useState(false);
 
+  // Resorts CRUD states
+  const [resortsList, setResortsList] = useState<any[]>([]);
+  const [resortsLoading, setResortsLoading] = useState(false);
+  const [resortModalOpen, setResortModalOpen] = useState(false);
+  const [editingResort, setEditingResort] = useState<any | null>(null);
+  const [deletingResortId, setDeletingResortId] = useState<string | null>(null);
+  
+  // Resort form fields
+  const [resortName, setResortName] = useState('');
+  const [resortDescription, setResortDescription] = useState('');
+  const [resortLocation, setResortLocation] = useState('');
+  const [resortLatitude, setResortLatitude] = useState('0.0');
+  const [resortLongitude, setResortLongitude] = useState('0.0');
+  const [resortImages, setResortImages] = useState('');
+  const [resortRating, setResortRating] = useState('5.0');
+
+  const handleSaveResort = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResortsLoading(true);
+    try {
+      const url = editingResort ? `/api/resorts/${editingResort.id}` : '/api/resorts';
+      const method = editingResort ? 'PUT' : 'POST';
+      
+      const payload = {
+        name: resortName,
+        description: resortDescription,
+        location: resortLocation,
+        latitude: parseFloat(resortLatitude) || 0,
+        longitude: parseFloat(resortLongitude) || 0,
+        images: resortImages.split(',').map(img => img.trim()).filter(Boolean),
+        rating: parseFloat(resortRating) || 5.0
+      };
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        showToast(editingResort ? 'Resort updated successfully.' : 'Resort created successfully.', 'success');
+        setResortModalOpen(false);
+        setEditingResort(null);
+        setResortName('');
+        setResortDescription('');
+        setResortLocation('');
+        setResortLatitude('0.0');
+        setResortLongitude('0.0');
+        setResortImages('');
+        setResortRating('5.0');
+        await fetchDashboardData(true);
+      } else {
+        showToast(data.error || 'Failed to save resort.', 'error');
+      }
+    } catch (err) {
+      showToast('Error saving resort.', 'error');
+    } finally {
+      setResortsLoading(false);
+    }
+  };
+
+  const executeDeleteResort = async (id: string) => {
+    setActionLoadingId(id);
+    try {
+      const res = await fetch(`/api/resorts/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showToast('Resort deleted successfully.', 'success');
+        setDeletingResortId(null);
+        await fetchDashboardData(true);
+      } else {
+        const data = await res.json();
+        showToast(data.error || 'Failed to delete resort.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Error deleting resort.', 'error');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const startEditResort = (resort: any) => {
+    setEditingResort(resort);
+    setResortName(resort.name);
+    setResortDescription(resort.description);
+    setResortLocation(resort.location);
+    setResortLatitude(String(resort.latitude));
+    setResortLongitude(String(resort.longitude));
+    setResortImages(resort.images.join(', '));
+    setResortRating(String(resort.rating));
+    setResortModalOpen(true);
+  };
+
+  const startCreateResort = () => {
+    setEditingResort(null);
+    setResortName('');
+    setResortDescription('');
+    setResortLocation('');
+    setResortLatitude('0.0');
+    setResortLongitude('0.0');
+    setResortImages('');
+    setResortRating('5.0');
+    setResortModalOpen(true);
+  };
+
   const fetchDashboardData = async (silent = false) => {
     if (!session?.user) return;
     if (!silent) setLoading(true);
@@ -133,6 +239,11 @@ export default function DashboardPage() {
           const bkRes = await fetch('/api/admin/bookings');
           const bkData = await bkRes.json();
           setAdminBookings(bkData || []);
+
+          // Fetch Resorts list for Tab
+          const rRes = await fetch('/api/resorts?limit=100');
+          const rData = await rRes.json();
+          setResortsList(rData.resorts || []);
         } else {
           const res = await fetch('/api/dashboard/staff');
           const data = await res.json();
@@ -831,6 +942,17 @@ export default function DashboardPage() {
                 >
                   <FileSpreadsheet className="h-4 w-4 shrink-0" />
                   <span>System Audits</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('resorts')}
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs uppercase tracking-wider font-bold transition-all shrink-0 cursor-pointer lg:w-full text-left ${
+                    activeTab === 'resorts' 
+                      ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20' 
+                      : 'text-[#8a8a8a] hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Building className="h-4 w-4 shrink-0" />
+                  <span>Resort Properties</span>
                 </button>
               </div>
             </aside>
@@ -1649,7 +1771,229 @@ export default function DashboardPage() {
                 </div>
               )}
 
+              {/* 8. RESORTS CRUD SUB-VIEW */}
+              {activeTab === 'resorts' && (
+                <div className="bg-[#1A1A1A]/80 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/5 shadow-2xl space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-6 gap-4">
+                    <div>
+                      <h2 className="font-heading text-2xl font-normal text-white">Resort Properties</h2>
+                      <p className="text-xs text-[#8a8a8a] mt-1">Manage global resort listings, locations, and multimedia showcases</p>
+                    </div>
+                    <button
+                      onClick={startCreateResort}
+                      className="bg-brand-accent hover:bg-brand-accent-hover text-white text-xs font-bold uppercase tracking-wider py-2.5 px-5 rounded-xl transition-all shadow-lg flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Register Resort</span>
+                    </button>
+                  </div>
+
+                  {/* Resorts Table List */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/5 text-[#8a8a8a] uppercase tracking-widest font-black">
+                          <th className="pb-3">Resort Name</th>
+                          <th className="pb-3 px-3">Location</th>
+                          <th className="pb-3 px-3">Coordinates</th>
+                          <th className="pb-3 px-3">Images Count</th>
+                          <th className="pb-3 px-3">Rating</th>
+                          <th className="pb-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-[#A0A0A0] divide-y divide-white/5">
+                        {resortsList.map((res: any) => (
+                          <tr key={res.id} className="hover:bg-white/[0.01]">
+                            <td className="py-4">
+                              <span className="font-bold text-white block text-sm">{res.name}</span>
+                              <span className="text-[10px] text-[#8a8a8a] block max-w-sm truncate">{res.description}</span>
+                            </td>
+                            <td className="py-4 px-3 font-semibold text-white">
+                              {res.location}
+                            </td>
+                            <td className="py-4 px-3 font-semibold text-[#8a8a8a]">
+                              {res.latitude?.toFixed(4)}, {res.longitude?.toFixed(4)}
+                            </td>
+                            <td className="py-4 px-3 font-bold text-brand-accent">
+                              {res.images?.length || 0} Images
+                            </td>
+                            <td className="py-4 px-3 font-bold text-white">
+                              ★ {res.rating?.toFixed(1) || '5.0'}
+                            </td>
+                            <td className="py-4 text-right space-y-1.5">
+                              {deletingResortId === res.id ? (
+                                <div className="flex items-center justify-end gap-2 bg-[#1C1C1C] border border-red-500/30 p-1.5 rounded-lg w-fit ml-auto">
+                                  <span className="text-[9px] text-red-400 font-bold uppercase">Cascade Delete?</span>
+                                  <button
+                                    disabled={actionLoadingId === res.id}
+                                    onClick={() => executeDeleteResort(res.id)}
+                                    className="bg-red-500 text-white text-[8px] font-bold py-1 px-2 rounded hover:bg-red-600 transition-colors flex items-center justify-center min-w-[32px]"
+                                  >
+                                    {actionLoadingId === res.id ? (
+                                      <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : 'Yes'}
+                                  </button>
+                                  <button
+                                    disabled={actionLoadingId === res.id}
+                                    onClick={() => setDeletingResortId(null)}
+                                    className="bg-white/10 text-white text-[8px] font-bold py-1 px-2 rounded hover:bg-white/20 transition-colors"
+                                  >
+                                    No
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex justify-end gap-3">
+                                  <button
+                                    onClick={() => startEditResort(res)}
+                                    className="text-[#8a8a8a] hover:text-white transition-colors cursor-pointer font-bold uppercase text-[9px] border border-white/10 hover:border-white/25 px-2.5 py-1.5 rounded-lg bg-white/5"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => setDeletingResortId(res.id)}
+                                    className="text-red-400/70 hover:text-red-400 transition-colors cursor-pointer font-bold uppercase text-[9px] border border-red-500/10 hover:border-red-500/25 px-2.5 py-1.5 rounded-lg bg-red-500/5"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
             </div>
+
+            {/* RESORT CREATE / EDIT MODAL */}
+            {resortModalOpen && (
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
+                <div className="bg-[#1A1A1A] border border-white/10 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl animate-fade-in text-xs">
+                  <div className="flex justify-between items-start border-b border-white/5 pb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{editingResort ? 'Edit Resort Property' : 'Register Resort Property'}</h3>
+                      <p className="text-[#8a8a8a] text-[10px] uppercase font-bold mt-1">Configure resort details and locations</p>
+                    </div>
+                    <button 
+                      onClick={() => setResortModalOpen(false)}
+                      className="text-[#8a8a8a] hover:text-white transition-colors text-lg font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveResort} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider text-[9px]">Resort Name*</label>
+                        <input
+                          type="text"
+                          required
+                          value={resortName}
+                          onChange={(e) => setResortName(e.target.value)}
+                          placeholder="e.g. Horizon Maldives"
+                          className="w-full rounded-xl bg-white/5 border border-white/5 py-3 px-3 text-white outline-none focus:border-brand-accent focus:bg-white/10 transition-colors font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider text-[9px]">Location*</label>
+                        <input
+                          type="text"
+                          required
+                          value={resortLocation}
+                          onChange={(e) => setResortLocation(e.target.value)}
+                          placeholder="e.g. North Male Atoll"
+                          className="w-full rounded-xl bg-white/5 border border-white/5 py-3 px-3 text-white outline-none focus:border-brand-accent focus:bg-white/10 transition-colors font-semibold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider text-[9px]">Latitude*</label>
+                        <input
+                          type="number"
+                          step="any"
+                          required
+                          value={resortLatitude}
+                          onChange={(e) => setResortLatitude(e.target.value)}
+                          placeholder="e.g. 4.175"
+                          className="w-full rounded-xl bg-white/5 border border-white/5 py-3 px-3 text-white outline-none focus:border-brand-accent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider text-[9px]">Longitude*</label>
+                        <input
+                          type="number"
+                          step="any"
+                          required
+                          value={resortLongitude}
+                          onChange={(e) => setResortLongitude(e.target.value)}
+                          placeholder="e.g. 73.508"
+                          className="w-full rounded-xl bg-white/5 border border-white/5 py-3 px-3 text-white outline-none focus:border-brand-accent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider text-[9px]">Rating (1-5)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="5"
+                          required
+                          value={resortRating}
+                          onChange={(e) => setResortRating(e.target.value)}
+                          placeholder="5.0"
+                          className="w-full rounded-xl bg-white/5 border border-white/5 py-3 px-3 text-white outline-none focus:border-brand-accent"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider text-[9px]">Images (Comma-separated URLs)</label>
+                      <textarea
+                        value={resortImages}
+                        onChange={(e) => setResortImages(e.target.value)}
+                        placeholder="https://images.unsplash.com/photo-1, https://images.unsplash.com/photo-2"
+                        className="w-full rounded-xl bg-white/5 border border-white/5 py-3 px-3 text-white outline-none focus:border-brand-accent h-16 font-mono text-[10px]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider text-[9px]">Description*</label>
+                      <textarea
+                        required
+                        value={resortDescription}
+                        onChange={(e) => setResortDescription(e.target.value)}
+                        placeholder="Provide details about the resort..."
+                        className="w-full rounded-xl bg-white/5 border border-white/5 py-3 px-3 text-white outline-none focus:border-brand-accent h-24 font-light text-xs"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                      <button
+                        type="button"
+                        onClick={() => setResortModalOpen(false)}
+                        className="bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider py-2.5 px-6 rounded-xl transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={resortsLoading}
+                        className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold uppercase tracking-wider py-2.5 px-6 rounded-xl transition-all shadow-lg flex items-center gap-1.5"
+                      >
+                        {resortsLoading && <Loader2 className="h-3 w-3 animate-spin text-white" />}
+                        <span>{editingResort ? 'Update Property' : 'Register Property'}</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
 
             {/* DETAIL MODAL DRAWER FOR SELECTED BOOKING */}
             {selectedDetailBooking && (
