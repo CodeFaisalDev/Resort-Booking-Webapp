@@ -100,39 +100,115 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile dropdown menu */}
-      <div className={`md:hidden overflow-hidden transition-all duration-400 ease-in-out ${mobileMenuOpen ? 'max-h-[400px] opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
-        <div className="flex flex-col gap-4 py-4 border-t border-white/10">
-          <Link href="/book" onClick={() => setMobileMenuOpen(false)} className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A0A0A0] hover:text-white transition-colors">Stays Map</Link>
-          <Link href="/resorts" onClick={() => setMobileMenuOpen(false)} className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A0A0A0] hover:text-white transition-colors">Destinations</Link>
-          <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A0A0A0] hover:text-white transition-colors">About & Experiences</Link>
-          <div className="pt-2 border-t border-white/5 flex flex-col gap-3">
+      {/* Full-Screen Mobile Navigation Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[100] bg-[#0c0a09]/98 backdrop-blur-2xl md:hidden flex flex-col justify-between p-6 sm:p-10 transition-all duration-500 animate-in fade-in zoom-in-95">
+          {/* Top Bar inside overlay */}
+          <div className="flex items-center justify-between border-b border-white/10 pb-6">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setMobileMenuOpen(false); router.push('/'); }}>
+              <span className="font-heading text-xl font-bold tracking-wider text-white">
+                BOOKME<span className="text-brand-accent">.COM</span>
+              </span>
+            </div>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-95"
+              aria-label="Close menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Center Navigation Links */}
+          <div className="flex flex-col gap-6 my-auto py-8">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-amber-500/80">Navigation Menu</p>
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`text-2xl sm:text-3xl font-heading font-medium tracking-wide transition-colors ${
+                pathname === '/' ? 'text-brand-accent font-semibold' : 'text-stone-300 hover:text-white'
+              }`}
+            >
+              01. Home Overview
+            </Link>
+            <Link
+              href="/resorts"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`text-2xl sm:text-3xl font-heading font-medium tracking-wide transition-colors ${
+                pathname?.startsWith('/resorts') ? 'text-brand-accent font-semibold' : 'text-stone-300 hover:text-white'
+              }`}
+            >
+              02. Explore Resorts
+            </Link>
+            <Link
+              href="/book"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`text-2xl sm:text-3xl font-heading font-medium tracking-wide transition-colors ${
+                pathname === '/book' ? 'text-brand-accent font-semibold' : 'text-stone-300 hover:text-white'
+              }`}
+            >
+              03. Interactive Stays Map
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`text-2xl sm:text-3xl font-heading font-medium tracking-wide transition-colors ${
+                pathname === '/about' ? 'text-brand-accent font-semibold' : 'text-stone-300 hover:text-white'
+              }`}
+            >
+              04. About & Experiences
+            </Link>
+          </div>
+
+          {/* Bottom Session & Action Drawer */}
+          <div className="border-t border-white/10 pt-6 flex flex-col gap-4">
             {session ? (
-              <>
-                <button 
-                  onClick={() => { setMobileMenuOpen(false); router.push('/dashboard'); }} 
-                  className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white text-[11px] font-bold uppercase tracking-wider py-3 rounded-lg cursor-pointer"
-                >
-                  Dashboard
-                </button>
-                <button 
-                  onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: '/' }); }} 
-                  className="w-full border border-white/10 hover:border-white/20 text-white text-[11px] font-bold uppercase tracking-wider py-3 rounded-lg cursor-pointer"
-                >
-                  Logout
-                </button>
-              </>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3 bg-stone-900/80 p-3 rounded-xl border border-stone-800">
+                  <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+                    {session.user?.name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-white">{session.user?.name}</span>
+                    <span className="text-[10px] text-stone-400">{session.user?.email}</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); router.push('/dashboard'); }}
+                    className="bg-brand-accent hover:bg-brand-accent-hover text-white text-xs font-bold uppercase tracking-wider py-3.5 rounded-xl transition-all cursor-pointer text-center"
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: '/' }); }}
+                    className="border border-stone-700 hover:border-stone-500 text-stone-300 hover:text-white text-xs font-bold uppercase tracking-wider py-3.5 rounded-xl transition-all cursor-pointer text-center"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </div>
             ) : (
-              <button 
-                onClick={() => { setMobileMenuOpen(false); router.push('/login'); }} 
-                className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white text-[11px] font-bold uppercase tracking-wider py-3 rounded-lg cursor-pointer"
-              >
-                Sign In
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => { setMobileMenuOpen(false); router.push('/login'); }}
+                  className="bg-brand-accent hover:bg-brand-accent-hover text-white text-xs font-bold uppercase tracking-wider py-3.5 rounded-xl transition-all cursor-pointer text-center"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); router.push('/login?tab=register'); }}
+                  className="border border-amber-500/30 hover:border-amber-500 text-amber-400 text-xs font-bold uppercase tracking-wider py-3.5 rounded-xl transition-all cursor-pointer text-center"
+                >
+                  Create Account
+                </button>
+              </div>
             )}
           </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 }

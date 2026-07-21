@@ -8,45 +8,51 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 export default function SmoothScroll() {
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // ── 1. Hard-reset scroll state on EVERY route change ──
-    // This is critical: Lenis sets overflow:hidden on <html>.
-    // When destroyed, it may not fully reset — causing scroll-lock
-    // on the next page if the new Lenis hasn't initialized yet.
-    document.documentElement.style.overflow = '';
-    document.documentElement.style.height = '';
-    document.body.style.overflow = '';
-    document.body.style.height = '';
+    // Helper to clean up all Lenis classes & inline styles on <html> and <body>
+    const forceCleanupStyles = () => {
+      const html = document.documentElement;
+      const body = document.body;
+      html.style.overflow = '';
+      html.style.height = '';
+      html.classList.remove('lenis', 'lenis-smooth', 'lenis-scrolling', 'lenis-[#141414]', 'lenis-stopped');
+      body.style.overflow = '';
+      body.style.height = '';
+      body.classList.remove('lenis', 'lenis-smooth', 'lenis-scrolling', 'lenis-stopped');
+    };
+
+    // 1. Immediate reset on route change
+    forceCleanupStyles();
     window.scrollTo(0, 0);
 
-    // Dashboard pages use fixed-viewport layouts with their own
-    // overflow-y-auto panels — Lenis must NOT run there.
+    // Dashboard pages use fixed-viewport inner scrolling — Lenis must NOT run there
     if (pathname?.startsWith('/dashboard')) {
+      // Guarantee standard browser scrolling is available if dashboard inner panel needs it
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
       return;
     }
 
     gsap.registerPlugin(ScrollTrigger);
 
-    // ── 2. Delay Lenis init by one animation frame ──
-    // This ensures React has flushed the new page's DOM before
-    // Lenis measures content height. Without this, Lenis may
-    // calculate maxScroll = 0 and lock scrolling.
-    let rafId: number;
-    let lenis: Lenis;
+    let lenis: Lenis | null = null;
+    let resizeObserver: ResizeObserver | null = null;
 
-    rafId = requestAnimationFrame(() => {
+    // 2. Schedule Lenis initialization
+    rafIdRef.current = requestAnimationFrame(() => {
       lenis = new Lenis({
-        duration: 1.4,
+        duration: 1.2,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         orientation: 'vertical',
         gestureOrientation: 'vertical',
         smoothWheel: true,
         wheelMultiplier: 1.0,
-        touchMultiplier: 1.3,
-        lerp: 0.08,
+        touchMultiplier: 1.2,
+        lerp: 0.09,
         autoResize: true,
       });
 
@@ -58,7 +64,7 @@ export default function SmoothScroll() {
       });
 
       const updateTicker = (time: number) => {
-        lenis.raf(time * 1000);
+        lenis?.raf(time * 1000);
       };
 
       gsap.ticker.add(updateTicker);
@@ -67,18 +73,35 @@ export default function SmoothScroll() {
       // Start at top
       lenis.scrollTo(0, { immediate: true });
 
-      // Force a resize recalculation after content settles
-      setTimeout(() => {
-        lenis.resize();
-        ScrollTrigger.refresh();
-      }, 150);
+      // Observe body height changes & recalculate Lenis + GSAP dimensions
+      resizeObserver = new ResizeObserver(() => {
+        if (lenisRef.current) {
+          lenisRef.current.resize();
+          ScrollTrigger.refresh();
+        }
+      });
+      resizeObserver.observe(document.body);
 
-      // Store cleanup data
+      // Extra safety refresh after DOM settles
+      setTimeout(() => {
+        if (lenisRef.current) {
+          lenisRef.current.resize();
+          ScrollTrigger.refresh();
+        }
+      }, 200);
+
       (lenis as any).__updateTicker = updateTicker;
     });
 
+    // 3. Cleanup on unmount or pathname change
     return () => {
-      cancelAnimationFrame(rafId);
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       if (lenisRef.current) {
         const l = lenisRef.current;
         if ((l as any).__updateTicker) {
@@ -87,13 +110,11 @@ export default function SmoothScroll() {
         l.destroy();
         lenisRef.current = null;
       }
-      // Hard-reset on cleanup too
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.height = '';
-      document.body.style.overflow = '';
-      document.body.style.height = '';
+      forceCleanupStyles();
+      ScrollTrigger.refresh();
     };
   }, [pathname]);
 
   return null;
 }
+

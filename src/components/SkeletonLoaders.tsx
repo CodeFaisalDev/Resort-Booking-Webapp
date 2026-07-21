@@ -139,3 +139,48 @@ export function CheckoutPageSkeleton() {
     </div>
   );
 }
+
+export function GlobalPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#0C0A09] flex flex-col items-center justify-center p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-10 w-10 rounded-2xl bg-white/10 animate-pulse" />
+        <Skeleton className="h-6 w-40 rounded-lg bg-white/10 animate-pulse" />
+      </div>
+      <div className="w-full max-w-4xl space-y-4">
+        <Skeleton className="h-14 w-full rounded-2xl bg-white/[0.04]" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Skeleton className="h-32 rounded-2xl bg-white/[0.03]" />
+          <Skeleton className="h-32 rounded-2xl bg-white/[0.03]" />
+          <Skeleton className="h-32 rounded-2xl bg-white/[0.03]" />
+        </div>
+        <Skeleton className="h-64 w-full rounded-3xl bg-white/[0.03]" />
+      </div>
+    </div>
+  );
+}
+
+export function AuditLogsSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center pb-3 border-b border-white/5">
+        <Skeleton className="h-4 w-28 bg-white/[0.03]" />
+        <Skeleton className="h-4 w-44 bg-white/[0.03]" />
+        <Skeleton className="h-4 w-32 bg-white/[0.03]" />
+      </div>
+      <div className="space-y-3">
+        {Array.from({ length: rows }).map((_, rIdx) => (
+          <div key={rIdx} className="flex justify-between items-center py-3 border-b border-white/[0.02]">
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-40 bg-white/[0.03]" />
+              <Skeleton className="h-3 w-24 bg-white/[0.02]" />
+            </div>
+            <Skeleton className="h-6 w-20 bg-white/[0.03] rounded-full" />
+            <Skeleton className="h-4 w-32 bg-white/[0.02]" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+

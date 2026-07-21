@@ -407,10 +407,16 @@ function ResortsBrowseContent() {
                           {prices.min !== prices.max && <span className="text-xs text-[#8a8a8a]"> – ${prices.max}</span>}
                           <span className="text-[9px] text-[#8a8a8a] font-bold uppercase ml-1">/ night</span>
                         </div>
-                        <button onClick={() => router.push(`/book/${r.id}`)}
-                          className="rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white font-bold text-[10px] uppercase tracking-wider px-5 py-2.5 flex items-center gap-1.5 transition-all shadow-lg cursor-pointer">
-                          Reserve <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => router.push(`/resorts/${r.id}`)}
+                            className="rounded-xl border border-white/10 hover:border-amber-500/40 text-stone-300 hover:text-white font-bold text-[10px] uppercase tracking-wider px-3.5 py-2.5 transition-all cursor-pointer">
+                            View Details
+                          </button>
+                          <button onClick={() => router.push(`/book/${r.id}`)}
+                            className="rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white font-bold text-[10px] uppercase tracking-wider px-4 py-2.5 flex items-center gap-1.5 transition-all shadow-lg cursor-pointer">
+                            Reserve <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -482,14 +488,17 @@ function ResortsBrowseContent() {
 
                     {/* Actions */}
                     <div className="flex gap-2 pt-2">
+                      <button onClick={() => router.push(`/resorts/${r.id}`)}
+                        className="rounded-xl border border-white/10 hover:border-amber-500/40 text-stone-300 hover:text-white font-bold text-[10px] uppercase px-3 py-3 transition-all cursor-pointer">
+                        Details
+                      </button>
                       <button onClick={() => router.push(`/book/${r.id}`)}
                         className="flex-grow rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white font-bold text-[10px] uppercase py-3 transition-all text-center flex items-center justify-center gap-1.5 shadow-lg cursor-pointer">
-                        Reserve Suite <ArrowRight className="h-3 w-3" />
+                        Reserve <ArrowRight className="h-3 w-3" />
                       </button>
                       <button onClick={() => setExpandedResortId(isExpanded ? null : r.id)}
-                        className="rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 text-white font-bold text-[10px] uppercase px-3.5 py-3 transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer">
+                        className="rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 text-white font-bold text-[10px] uppercase px-3 py-3 transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer">
                         <Layers className="h-3 w-3 text-brand-accent" />
-                        <span className="hidden sm:inline">{isExpanded ? 'Hide' : 'Rooms'}</span>
                       </button>
                     </div>
 

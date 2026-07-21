@@ -12,7 +12,8 @@ import {
   ArrowRight,
   ShieldAlert,
   Loader2,
-  Info
+  Info,
+  Clock
 } from 'lucide-react';
 
 interface RoomType {
@@ -72,14 +73,22 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
   );
   const [activeImageIdx, setActiveImageIdx] = useState(0);
 
-  // Reservation states
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  // Date Helper utilities
+  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  const addDaysToStr = (baseDateStr: string, daysToAdd: number) => {
+    const d = baseDateStr ? new Date(baseDateStr) : new Date();
+    d.setDate(d.getDate() + daysToAdd);
+    return d.toISOString().split('T')[0];
+  };
+
+  // Reservation states (Defaulted to 3-day stay starting today)
+  const [checkIn, setCheckIn] = useState(getTodayStr());
+  const [checkOut, setCheckOut] = useState(addDaysToStr(getTodayStr(), 3));
   const [numGuests, setNumGuests] = useState('2');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   // Calculation outputs
-  const [nights, setNights] = useState(0);
+  const [nights, setNights] = useState(3);
   const [basePriceTotal, setBasePriceTotal] = useState(0);
   const [servicesTotal, setServicesTotal] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
@@ -87,6 +96,19 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
   // Submit states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Days Counter Handlers
+  const handleNightsChange = (newNights: number) => {
+    const baseStart = checkIn || getTodayStr();
+    if (!checkIn) setCheckIn(baseStart);
+    setCheckOut(addDaysToStr(baseStart, newNights));
+  };
+
+  const handleCheckInChange = (newIn: string) => {
+    setCheckIn(newIn);
+    const currentNights = nights > 0 ? nights : 3;
+    setCheckOut(addDaysToStr(newIn, currentNights));
+  };
 
   // Calculate live estimate when checkIn, checkOut, selectedServices, or selectedRoomTypeId changes
   useEffect(() => {
@@ -299,143 +321,226 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
 
         {/* Right Column (Live Invoice & Date Selector Panel) */}
         <div className="lg:col-span-5">
-          <div className="bg-[#1A1A1A]/80 backdrop-blur-md p-6 sm:p-8 rounded-3xl space-y-6 sticky top-[110px] shadow-2xl border border-white/5">
+          <div className="bg-[#1A1A1A]/90 backdrop-blur-xl p-6 sm:p-8 rounded-3xl space-y-6 sticky top-[110px] shadow-2xl border border-white/10 relative overflow-hidden">
+            
+            {/* Subtle luxury glow effect behind card header */}
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none" />
+
             <div>
-              <h2 className="font-sans text-xl sm:text-2xl font-bold text-white">Configure Reservation</h2>
-              <span className="text-[10px] text-[#8a8a8a] font-bold uppercase tracking-wider block mt-1">Estimate invoice values instantly</span>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-2 w-2 rounded-full bg-brand-accent animate-pulse" />
+                <span className="text-[10px] text-brand-accent font-mono font-bold uppercase tracking-widest">Luxury Booking Engine</span>
+              </div>
+              <h2 className="font-heading text-2xl sm:text-3xl font-normal text-white tracking-tight">Configure Reservation</h2>
+              <span className="text-[10px] text-stone-400 font-semibold uppercase tracking-wider block mt-1">Instant invoice estimation & suite lock</span>
             </div>
 
             {error && (
-              <div className="rounded-xl bg-red-950/40 border border-red-500/20 p-4 text-center text-xs text-red-400 flex items-center justify-center gap-2 shadow-sm font-semibold">
-                <ShieldAlert className="h-4 w-4 shrink-0 text-red-500" />
+              <div className="rounded-2xl bg-rose-950/40 border border-rose-500/30 p-4 text-center text-xs text-rose-300 flex items-center justify-center gap-2.5 shadow-sm font-semibold animate-fade-in">
+                <ShieldAlert className="h-4 w-4 shrink-0 text-rose-400" />
                 <span>{error}</span>
               </div>
             )}
 
             <form onSubmit={handleBookingSubmit} className="space-y-6 text-xs">
               
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Dates Selection */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider">Check-In</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3.5 top-3.5 h-4 w-4 text-[#8a8a8a]" />
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400 mb-1.5">
+                    Check-In Date
+                  </label>
+                  <div className="relative group">
+                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-accent pointer-events-none transition-colors group-focus-within:text-amber-400" />
                     <input
                       type="date"
                       required
                       value={checkIn}
-                      onChange={(e) => setCheckIn(e.target.value)}
-                      className="w-full rounded-xl bg-white/5 border border-white/5 py-3.5 pl-10 pr-3 text-white outline-none focus:border-brand-accent focus:bg-white/10 transition-colors"
+                      onChange={(e) => handleCheckInChange(e.target.value)}
+                      className="w-full rounded-2xl bg-white/[0.03] border border-white/10 py-3.5 pl-10 pr-3 text-white text-xs outline-none focus:border-brand-accent focus:bg-white/[0.06] focus:ring-1 focus:ring-brand-accent/50 transition-all font-medium [color-scheme:dark]"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider">Check-Out</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3.5 top-3.5 h-4 w-4 text-[#8a8a8a]" />
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400 mb-1.5">
+                    Check-Out Date
+                  </label>
+                  <div className="relative group">
+                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-accent pointer-events-none transition-colors group-focus-within:text-amber-400" />
                     <input
                       type="date"
                       required
                       value={checkOut}
                       onChange={(e) => setCheckOut(e.target.value)}
-                      className="w-full rounded-xl bg-white/5 border border-white/5 py-3.5 pl-10 pr-3 text-white outline-none focus:border-brand-accent focus:bg-white/10 transition-colors"
+                      className="w-full rounded-2xl bg-white/[0.03] border border-white/10 py-3.5 pl-10 pr-3 text-white text-xs outline-none focus:border-brand-accent focus:bg-white/[0.06] focus:ring-1 focus:ring-brand-accent/50 transition-all font-medium [color-scheme:dark]"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Guests Count */}
+              {/* Interactive Stay Duration (Days / Nights) Counter */}
               <div>
-                <label className="block text-[#8a8a8a] uppercase mb-1.5 font-bold tracking-wider">Number of Guests</label>
-                <div className="relative">
-                  <Users className="absolute left-3.5 top-3.5 h-4 w-4 text-[#8a8a8a]" />
-                  <select
-                    value={numGuests}
-                    onChange={(e) => setNumGuests(e.target.value)}
-                    className="w-full rounded-xl bg-white/5 border border-white/5 py-3.5 pl-10 pr-4 text-white outline-none focus:border-brand-accent focus:bg-white/10 transition-colors appearance-none font-bold"
-                  >
-                    <option value="1" className="bg-[#141414]">1 Guest</option>
-                    <option value="2" className="bg-[#141414]">2 Guests</option>
-                    <option value="3" className="bg-[#141414]">3 Guests</option>
-                    <option value="4" className="bg-[#141414]">4 Guests</option>
-                  </select>
+                <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400 mb-1.5">
+                  Stay Duration (Days / Nights)
+                </label>
+                <div className="flex items-center justify-between bg-white/[0.03] border border-white/10 rounded-2xl p-3.5 focus-within:border-brand-accent transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block text-white font-bold text-xs">
+                        {nights > 0 ? `${nights} ${nights === 1 ? 'Day / 1 Night' : 'Days / Nights'}` : '1 Day / Night'}
+                      </span>
+                      <span className="text-[10px] text-stone-400 font-medium">Automatic check-out adjustment</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-black/40 border border-white/5 rounded-xl p-1">
+                    <button
+                      type="button"
+                      onClick={() => handleNightsChange(Math.max(1, (nights || 1) - 1))}
+                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-brand-accent hover:text-white text-white font-bold flex items-center justify-center text-xs transition-all cursor-pointer disabled:opacity-30"
+                      disabled={(nights || 1) <= 1}
+                    >
+                      -
+                    </button>
+                    <span className="w-8 text-center font-bold text-brand-accent text-xs">{nights || 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleNightsChange((nights || 1) + 1)}
+                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-brand-accent hover:text-white text-white font-bold flex items-center justify-center text-xs transition-all cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Services marketplace */}
-              <div className="space-y-3 pt-2">
-                <label className="block text-[#8a8a8a] uppercase font-bold tracking-wider">Add-On Marketplace</label>
-                <div className="space-y-2">
+              {/* Interactive Guests Count (No overlapping text bug) */}
+              <div>
+                <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400 mb-1.5">
+                  Guests Count
+                </label>
+                <div className="flex items-center justify-between bg-white/[0.03] border border-white/10 rounded-2xl p-3.5 focus-within:border-brand-accent transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block text-white font-bold text-xs">{numGuests} {Number(numGuests) === 1 ? 'Guest' : 'Guests'}</span>
+                      <span className="text-[10px] text-stone-400 font-medium">Standard suite occupancy</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-black/40 border border-white/5 rounded-xl p-1">
+                    <button
+                      type="button"
+                      onClick={() => setNumGuests(prev => String(Math.max(1, Number(prev) - 1)))}
+                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-brand-accent hover:text-white text-white font-bold flex items-center justify-center text-xs transition-all cursor-pointer disabled:opacity-30"
+                      disabled={Number(numGuests) <= 1}
+                    >
+                      -
+                    </button>
+                    <span className="w-6 text-center font-bold text-white text-xs">{numGuests}</span>
+                    <button
+                      type="button"
+                      onClick={() => setNumGuests(prev => String(Math.min(10, Number(prev) + 1)))}
+                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-brand-accent hover:text-white text-white font-bold flex items-center justify-center text-xs transition-all cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Add-On Services Marketplace */}
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400">
+                    Add-On Marketplace
+                  </label>
+                  {selectedServices.length > 0 && (
+                    <span className="text-[10px] text-brand-accent font-bold uppercase tracking-wider">
+                      {selectedServices.length} Selected
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2.5 max-h-[260px] overflow-y-auto pr-1">
                   {services.map(s => {
                     const isChecked = selectedServices.includes(s.id);
                     return (
-                      <button
+                      <div
                         key={s.id}
-                        type="button"
                         onClick={() => handleServiceToggle(s.id)}
-                        className={`w-full text-left p-3.5 rounded-xl border transition-all duration-300 flex items-center justify-between cursor-pointer ${
-                          isChecked ? 'border-brand-accent bg-brand-accent/5' : 'border-white/5 bg-[#1A1A1A]/40 hover:border-white/10 hover:bg-[#1A1A1A]/60'
+                        className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between cursor-pointer ${
+                          isChecked
+                            ? 'border-brand-accent bg-brand-accent/10 ring-1 ring-brand-accent/30 shadow-lg shadow-brand-accent/5'
+                            : 'border-white/5 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`h-5 w-5 rounded border flex items-center justify-center transition-all ${
-                            isChecked ? 'bg-brand-accent border-brand-accent text-white' : 'border-stone-750'
+                        <div className="flex items-center gap-3.5">
+                          <div className={`h-6 w-6 rounded-xl border flex items-center justify-center transition-all ${
+                            isChecked ? 'bg-brand-accent border-brand-accent text-stone-950 shadow-md shadow-brand-accent/40 scale-105' : 'border-white/20 bg-white/5'
                           }`}>
-                            {isChecked && <Check className="h-3 w-3 stroke-[3]" />}
+                            {isChecked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
                           </div>
                           <div>
-                            <span className="block font-bold text-white">{s.name}</span>
-                            <span className="text-[9px] text-[#8a8a8a] font-bold uppercase tracking-wider">{s.category}</span>
+                            <span className="block font-bold text-white text-xs tracking-tight">{s.name}</span>
+                            <span className="text-[9px] text-stone-400 font-mono font-semibold uppercase tracking-wider">{s.category}</span>
                           </div>
                         </div>
-                        <span className="text-brand-accent font-bold">+${Number(s.price).toFixed(0)} <span className="text-[9px] text-[#8a8a8a]">/ night</span></span>
-                      </button>
+                        <div className="text-right">
+                          <span className="text-brand-accent font-extrabold text-xs block">+${Number(s.price).toFixed(0)}</span>
+                          <span className="text-[9px] text-stone-500 font-medium uppercase">/ night</span>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Estimate Breakdown panel */}
+              {/* Live Cost Estimate Breakdown Panel */}
               {nights > 0 && (
-                <div className="rounded-2xl bg-[#141414]/80 border border-white/5 p-5 space-y-3 animate-fade-in">
-                  <h4 className="font-bold text-[10px] text-brand-accent uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <div className="rounded-2xl bg-black/60 border border-brand-accent/20 p-5 space-y-3 animate-fade-in shadow-xl">
+                  <h4 className="font-bold text-[10px] text-brand-accent uppercase tracking-wider flex items-center gap-1.5 mb-2 font-mono">
                     <Info className="h-3.5 w-3.5" />
                     <span>Cost Estimate Breakdown</span>
                   </h4>
-                  <div className="flex justify-between text-[#A0A0A0]">
+                  <div className="flex justify-between text-stone-300 text-xs">
                     <span>Stay Duration:</span>
                     <span className="font-bold text-white">{nights} {nights === 1 ? 'Night' : 'Nights'}</span>
                   </div>
-                  <div className="flex justify-between text-[#A0A0A0]">
+                  <div className="flex justify-between text-stone-300 text-xs">
                     <span>Base Accommodations:</span>
                     <span className="font-bold text-white">${basePriceTotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-[#A0A0A0]">
-                    <span>Add-On Services Total:</span>
-                    <span className="font-bold text-white">${servicesTotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between pt-3 border-t border-white/5 text-sm">
-                    <span className="font-bold text-[#A0A0A0]">Total Invoice Amount:</span>
-                    <span className="font-extrabold text-brand-accent">${grandTotal.toFixed(2)}</span>
+                  {servicesTotal > 0 && (
+                    <div className="flex justify-between text-stone-300 text-xs">
+                      <span>Add-On Services Total:</span>
+                      <span className="font-bold text-white">${servicesTotal.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-3 border-t border-white/10 text-sm">
+                    <span className="font-bold text-stone-200">Total Invoice Amount:</span>
+                    <span className="font-extrabold text-brand-accent text-base">${grandTotal.toFixed(2)}</span>
                   </div>
                 </div>
               )}
 
-              {/* Submit button */}
+              {/* Submit CTA Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-brand-accent py-4 font-bold uppercase tracking-wider text-white hover:bg-brand-accent-hover transition-all duration-300 shadow-lg flex items-center justify-center gap-2 text-[10px] cursor-pointer"
+                className="w-full rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 py-4 font-extrabold uppercase tracking-widest text-stone-950 hover:brightness-110 active:scale-[0.99] transition-all duration-300 shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 text-xs cursor-pointer border border-amber-300/30"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    <Loader2 className="h-4 w-4 animate-spin text-stone-950" />
                     <span>Securing Suite Reservation...</span>
                   </>
                 ) : (
                   <>
                     <span>Confirm Draft Reservation</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    <ArrowRight className="h-4 w-4 stroke-[2.5]" />
                   </>
                 )}
               </button>

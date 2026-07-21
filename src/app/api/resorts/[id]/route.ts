@@ -1,97 +1,70 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { cache } from '@/lib/cache';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // 1. Authorize session (must be admin)
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).type !== 'staff' || (session.user as any).role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
-    }
-
     const { id } = await params;
 
-    // 2. Query check if resort exists
     const resort = await prisma.resort.findUnique({
-      where: { id }
-    });
-
-    if (!resort) {
-      return NextResponse.json({ error: 'Resort not found.' }, { status: 404 });
-    }
-
-    // 3. Extract edit payload
-    const { name, description, location, latitude, longitude, images, rating } = await req.json();
-
-    const updateData: any = {};
-    if (name !== undefined) updateData.name = name;
-    if (description !== undefined) updateData.description = description;
-    if (location !== undefined) updateData.location = location;
-    if (latitude !== undefined) updateData.latitude = parseFloat(latitude);
-    if (longitude !== undefined) updateData.longitude = parseFloat(longitude);
-    if (images !== undefined) updateData.images = Array.isArray(images) ? images : [];
-    if (rating !== undefined) updateData.rating = parseFloat(rating);
-
-    // 4. Update Database
-    const updatedResort = await prisma.resort.update({
       where: { id },
-      data: updateData
-    });
-
-    // 5. Reset stale caches
-    cache.invalidatePrefix('resorts');
-
-    return NextResponse.json({
-      message: 'Resort updated successfully.',
-      resort: updatedResort
-    });
-  } catch (error: any) {
-    console.error('Update Resort API Error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
-  }
-}
-
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    // 1. Authorize session (must be admin)
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).type !== 'staff' || (session.user as any).role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
-    }
-
-    const { id } = await params;
-
-    // 2. Query check if resort exists
-    const resort = await prisma.resort.findUnique({
-      where: { id }
+      include: {
+        rooms: {
+          include: {
+            roomType: true
+          }
+        },
+        reviews: {
+          include: {
+            guest: {
+              select: {
+                fullName: true,
+                nationality: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
     });
 
     if (!resort) {
       return NextResponse.json({ error: 'Resort not found.' }, { status: 404 });
     }
 
-    // 3. Delete from database (Cascade deletes rooms and assignments)
-    await prisma.resort.delete({
-      where: { id }
-    });
+    const services = await prisma.service.findMany();
 
-    // 4. Reset stale caches
-    cache.invalidatePrefix('resorts');
+    const serializedResort = {
+      ...resort,
+      rooms: resort.rooms.map(room => ({
+        ...room,
+        roomType: {
+          ...room.roomType,
+          basePrice: Number(room.roomType.basePrice)
+        }
+      })),
+      reviews: resort.reviews.map(rev => ({
+        id: rev.id,
+        rating: rev.rating,
+        title: rev.title,
+        comment: rev.comment,
+        createdAt: rev.createdAt,
+        guestName: rev.guest.fullName,
+        guestNationality: rev.guest.nationality
+      }))
+    };
+
+    const serializedServices = services.map(s => ({
+      ...s,
+      price: Number(s.price)
+    }));
 
     return NextResponse.json({
-      message: 'Resort deleted successfully.'
+      resort: serializedResort,
+      services: serializedServices
     });
   } catch (error: any) {
-    console.error('Delete Resort API Error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to fetch resort details.' }, { status: 500 });
   }
 }

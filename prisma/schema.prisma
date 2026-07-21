@@ -41,6 +41,7 @@ model Guest {
   verificationExpires DateTime?     @map("verification_expires")
   reservations        Reservation[]
   payments            Payment[]
+  reviews             Review[]
 
   @@map("guest")
 }
@@ -66,6 +67,7 @@ model Resort {
   images      String[]
   rating      Float    @default(5.0)
   rooms       Room[]
+  reviews     Review[]
 
   @@map("resort")
 }
@@ -82,6 +84,9 @@ model Room {
   reservations    Reservation[]
   roomAssignments RoomAssignment[]
 
+  @@index([resortId])
+  @@index([roomTypeId])
+  @@index([status])
   @@map("room")
 }
 
@@ -106,6 +111,10 @@ model Reservation {
   reservationServices ReservationService[]
   roomAssignments     RoomAssignment[]
 
+  @@index([guestId])
+  @@index([roomId])
+  @@index([status])
+  @@index([checkIn, checkOut])
   @@map("reservation")
 }
 
@@ -120,6 +129,9 @@ model Payment {
   reservation   Reservation   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   guest         Guest         @relation(fields: [guestId], references: [id], onDelete: Cascade)
 
+  @@index([reservationId])
+  @@index([guestId])
+  @@index([status])
   @@map("payment")
 }
 
@@ -144,6 +156,7 @@ model Staff {
   services        Service[]
   roomAssignments RoomAssignment[]
 
+  @@index([departmentId])
   @@map("staff")
 }
 
@@ -168,6 +181,8 @@ model ReservationService {
   reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   service       Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
+  @@index([reservationId])
+  @@index([serviceId])
   @@map("reservation_service")
 }
 
@@ -182,5 +197,34 @@ model RoomAssignment {
   room          Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
   staff         Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
+  @@index([reservationId])
+  @@index([roomId])
+  @@index([staffId])
   @@map("room_assignment")
+}
+
+model Review {
+  id        String   @id @default(uuid()) @db.Uuid
+  resortId  String   @map("resort_id") @db.Uuid
+  guestId   String   @map("guest_id") @db.Uuid
+  rating    Int
+  title     String   @default("Wonderful Stay")
+  comment   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  resort    Resort   @relation(fields: [resortId], references: [id], onDelete: Cascade)
+  guest     Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@index([resortId])
+  @@index([guestId])
+  @@map("review")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?  @db.Text
+  permissions String[]
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("role")
 }

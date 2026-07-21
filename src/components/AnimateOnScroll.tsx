@@ -1,80 +1,151 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 interface AnimateOnScrollProps {
   children: React.ReactNode;
-  variant?: 'fade-up' | 'scale-in' | 'rotate-in' | 'fade-in';
+  variant?: 'fade-up' | 'scale-in' | 'rotate-in' | 'fade-in' | 'stagger-grid' | 'parallax';
   delay?: number;
   duration?: number;
   className?: string;
+  stagger?: number;
 }
 
 export default function AnimateOnScroll({
   children,
   variant = 'fade-up',
   delay = 0,
-  duration = 800,
-  className = ''
+  duration = 0.8,
+  className = '',
+  stagger = 0.1
 }: AnimateOnScrollProps) {
-  const domRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.unobserve(entry.target);
-        }
-      });
-    }, {
-      threshold: 0.1
-    });
+    if (typeof window === 'undefined') return;
+    gsap.registerPlugin(ScrollTrigger);
 
-    if (domRef.current) {
-      observer.observe(domRef.current);
-    }
+    const el = containerRef.current;
+    if (!el) return;
+
+    let ctx = gsap.context(() => {
+      const delayInSec = delay / 1000;
+
+      if (variant === 'fade-up') {
+        gsap.fromTo(
+          el,
+          { opacity: 0, y: 40 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: duration,
+            delay: delayInSec,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 88%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+      } else if (variant === 'scale-in') {
+        gsap.fromTo(
+          el,
+          { opacity: 0, scale: 0.92, y: 20 },
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: duration,
+            delay: delayInSec,
+            ease: 'back.out(1.4)',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 90%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+      } else if (variant === 'rotate-in') {
+        gsap.fromTo(
+          el,
+          { opacity: 0, rotation: -3, y: 35 },
+          {
+            opacity: 1,
+            rotation: 0,
+            y: 0,
+            duration: duration,
+            delay: delayInSec,
+            ease: 'power4.out',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 88%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+      } else if (variant === 'fade-in') {
+        gsap.fromTo(
+          el,
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: duration,
+            delay: delayInSec,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 90%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+      } else if (variant === 'stagger-grid') {
+        const children = el.children;
+        if (children && children.length > 0) {
+          gsap.fromTo(
+            Array.from(children),
+            { opacity: 0, y: 30, scale: 0.96 },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: duration,
+              delay: delayInSec,
+              stagger: stagger,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: el,
+                start: 'top 85%',
+                toggleActions: 'play none none none',
+              },
+            }
+          );
+        }
+      } else if (variant === 'parallax') {
+        gsap.to(el, {
+          y: -40,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1,
+          },
+        });
+      }
+    }, containerRef);
 
     return () => {
-      if (domRef.current) {
-        observer.unobserve(domRef.current);
-      }
+      ctx.revert();
     };
-  }, []);
-
-  const getVariantStyles = () => {
-    switch (variant) {
-      case 'fade-up':
-        return isVisible 
-          ? 'translate-y-0 opacity-100' 
-          : 'translate-y-10 opacity-0';
-      case 'scale-in':
-        return isVisible 
-          ? 'scale-100 opacity-100' 
-          : 'scale-95 opacity-0';
-      case 'rotate-in':
-        return isVisible 
-          ? 'rotate-0 translate-y-0 opacity-100' 
-          : '-rotate-2 translate-y-8 opacity-0';
-      case 'fade-in':
-        return isVisible 
-          ? 'opacity-100' 
-          : 'opacity-0';
-      default:
-        return '';
-    }
-  };
+  }, [variant, delay, duration, stagger]);
 
   return (
-    <div
-      ref={domRef}
-      className={`transition-all ease-[cubic-bezier(0.16,1,0.3,1)] ${getVariantStyles()} ${className}`}
-      style={{
-        transitionDelay: `${delay}ms`,
-        transitionDuration: `${duration}ms`
-      }}
-    >
+    <div ref={containerRef} className={className}>
       {children}
     </div>
   );
 }
+
