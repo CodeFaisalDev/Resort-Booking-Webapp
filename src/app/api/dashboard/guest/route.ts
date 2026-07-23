@@ -23,7 +23,21 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json({ reservations });
+    const favorites = await prisma.favorite.findMany({
+      where: { guestId },
+      include: {
+        resort: {
+          include: {
+            rooms: {
+              include: { roomType: true }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return NextResponse.json({ reservations, favorites });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

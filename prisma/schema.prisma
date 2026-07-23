@@ -39,9 +39,12 @@ model Guest {
   isVerified          Boolean       @default(false) @map("is_verified")
   verificationCode    String?       @map("verification_code")
   verificationExpires DateTime?     @map("verification_expires")
+  resetCode           String?       @map("reset_code")
+  resetExpires        DateTime?     @map("reset_expires")
   reservations        Reservation[]
   payments            Payment[]
   reviews             Review[]
+  favorites           Favorite[]
 
   @@map("guest")
 }
@@ -68,8 +71,23 @@ model Resort {
   rating      Float    @default(5.0)
   rooms       Room[]
   reviews     Review[]
+  favorites   Favorite[]
 
   @@map("resort")
+}
+
+model Favorite {
+  id        String   @id @default(uuid()) @db.Uuid
+  guestId   String   @map("guest_id") @db.Uuid
+  resortId  String   @map("resort_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  guest     Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  resort    Resort   @relation(fields: [resortId], references: [id], onDelete: Cascade)
+
+  @@unique([guestId, resortId])
+  @@index([guestId])
+  @@index([resortId])
+  @@map("favorite")
 }
 
 model Room {
@@ -152,6 +170,8 @@ model Staff {
   password        String
   role            String
   shift           String
+  resetCode       String?          @map("reset_code")
+  resetExpires    DateTime?        @map("reset_expires")
   department      Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   services        Service[]
   roomAssignments RoomAssignment[]

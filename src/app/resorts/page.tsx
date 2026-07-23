@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import SafeImage from '@/components/SafeImage';
 import { 
   Compass, 
   MapPin, 
@@ -55,6 +57,7 @@ interface Resort {
 function ResortsBrowseContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
 
   const [resorts, setResorts] = useState<Resort[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +80,26 @@ function ResortsBrowseContent() {
     const urlQuery = searchParams.get('query') || '';
     setSearchQuery(urlQuery);
   }, [searchParams]);
+
+  // Load user's saved favorites when logged in
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        const res = await fetch('/api/favorites');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.favoriteIds) {
+            setLikedIds(new Set(data.favoriteIds));
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching favorites:', e);
+      }
+    };
+    if (session) {
+      loadFavorites();
+    }
+  }, [session]);
 
   useEffect(() => {
     const loadAllResorts = async () => {
@@ -149,13 +172,39 @@ function ResortsBrowseContent() {
     e.preventDefault(); e.stopPropagation();
     setImgIndices(prev => ({ ...prev, [id]: ((prev[id] || 0) - 1 + total) % total }));
   };
-  const toggleLike = (id: string, e: React.MouseEvent) => {
+
+  const toggleLike = async (id: string, e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
+
+    if (!session) {
+      router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+
+    // Optimistic UI update
     setLikedIds(prev => {
       const s = new Set(prev);
       s.has(id) ? s.delete(id) : s.add(id);
       return s;
     });
+
+    try {
+      const res = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resortId: id })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.loginRequired) {
+          router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname));
+        }
+      } else if (data.favoriteIds) {
+        setLikedIds(new Set(data.favoriteIds));
+      }
+    } catch (err) {
+      console.error('Error toggling favorite:', err);
+    }
   };
 
   const categories = [
@@ -176,28 +225,28 @@ function ResortsBrowseContent() {
   const activeFiltersCount = (minRating > 0 ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 2000 ? 1 : 0);
 
   return (
-    <div className="w-full min-h-screen bg-[#141414] text-[#E5E5E5] relative">
+    <div className="w-full min-h-screen bg-[#141414] text-[#E5E5E5] relative overflow-x-hidden">
       
       {/* Decorative glows */}
       <div className="absolute top-[10%] left-[-15%] w-[500px] h-[500px] bg-brand-accent/3 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[30%] right-[-15%] w-[500px] h-[500px] bg-brand-accent/3 rounded-full blur-[140px] pointer-events-none" />
 
       {/* ─── HERO SECTION ─── */}
-      <section className="pt-32 pb-12 px-4 sm:px-8 text-center space-y-6 relative z-10">
+      <section className="pt-28 sm:pt-32 pb-8 sm:pb-12 px-4 sm:px-8 text-center space-y-4 sm:space-y-6 relative z-10 max-w-4xl mx-auto">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent border border-brand-accent/20">
           <Compass className="h-3.5 w-3.5" />
           <span>Global Resort Collection</span>
         </div>
-        <h1 className="font-heading text-4xl sm:text-6xl font-normal tracking-tight text-white leading-tight">
+        <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-white leading-tight px-2">
           Discover Your Dream Stay
         </h1>
-        <p className="mx-auto max-w-xl text-[#A0A0A0] text-xs sm:text-sm font-medium leading-relaxed">
+        <p className="mx-auto max-w-xl text-[#A0A0A0] text-xs sm:text-sm font-medium leading-relaxed px-2">
           Explore our curated collection of premium resorts worldwide. Compare rates, browse rooms, and reserve your perfect escape.
         </p>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="mx-auto max-w-2xl bg-[#1A1A1A]/80 border border-white/5 rounded-full p-1.5 shadow-2xl flex items-center gap-3 focus-within:border-brand-accent/40 transition-colors">
-          <div className="flex items-center gap-2 pl-4 flex-grow">
+        <form onSubmit={handleSearchSubmit} className="mx-auto max-w-2xl bg-[#1A1A1A]/80 border border-white/5 rounded-2xl sm:rounded-full p-2 sm:p-1.5 shadow-2xl flex flex-col sm:flex-row items-center gap-2 sm:gap-3 focus-within:border-brand-accent/40 transition-colors w-full">
+          <div className="flex items-center gap-2 pl-3 sm:pl-4 flex-grow w-full py-1.5 sm:py-0">
             <Search className="h-4.5 w-4.5 text-[#555] shrink-0" />
             <input
               type="text"
@@ -207,7 +256,7 @@ function ResortsBrowseContent() {
               className="bg-transparent text-xs text-white outline-none w-full placeholder-stone-600 font-bold"
             />
           </div>
-          <button type="submit" className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold text-xs uppercase px-6 py-3 rounded-full transition-all shrink-0 shadow-lg cursor-pointer">
+          <button type="submit" className="bg-brand-accent hover:bg-brand-accent-hover text-white font-bold text-xs uppercase px-6 py-3 rounded-xl sm:rounded-full transition-all shrink-0 shadow-lg cursor-pointer w-full sm:w-auto text-center">
             Search Collection
           </button>
         </form>
@@ -365,7 +414,12 @@ function ResortsBrowseContent() {
                   <div key={r.id} className="group flex flex-col sm:flex-row rounded-2xl border border-white/5 bg-[#1A1A1A]/80 backdrop-blur-md overflow-hidden hover:border-brand-accent/20 transition-all duration-300 shadow-lg">
                     {/* Image */}
                     <div className="relative w-full sm:w-72 h-52 sm:h-auto shrink-0 overflow-hidden">
-                      <img src={images[imgIdx]} alt={r.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      <SafeImage
+                        src={images[imgIdx]}
+                        alt={r.name}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#1A1A1A]/30 hidden sm:block" />
                       {images.length > 1 && (
                         <>
@@ -428,9 +482,12 @@ function ResortsBrowseContent() {
                 <div key={r.id} className="group rounded-2xl overflow-hidden border border-white/5 bg-[#1A1A1A]/80 backdrop-blur-md shadow-lg hover:border-brand-accent/20 hover:shadow-2xl hover:shadow-brand-accent/5 transition-all duration-300 flex flex-col">
                   {/* Image carousel */}
                   <div className="relative h-56 overflow-hidden">
-                    <img src={images[imgIdx]} alt={r.name}
-                      onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=600'; }}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <SafeImage
+                      src={images[imgIdx]}
+                      alt={r.name}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
 
                     {images.length > 1 && (

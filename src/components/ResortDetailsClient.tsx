@@ -13,8 +13,10 @@ import {
   ShieldAlert,
   Loader2,
   Info,
-  Clock
+  Clock,
+  Heart
 } from 'lucide-react';
+import SafeImage from '@/components/SafeImage';
 
 interface RoomType {
   id: string;
@@ -68,10 +70,55 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
   const availableRoomTypes = Object.values(roomTypesMap);
 
   // Active States
-  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState(
+  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>(
     availableRoomTypes.length > 0 ? availableRoomTypes[0].id : ''
   );
+  const [isFavorited, setIsFavorited] = useState(false);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+
+  useEffect(() => {
+    async function checkFavorite() {
+      try {
+        const res = await fetch('/api/favorites');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.favoriteIds && data.favoriteIds.includes(resort.id)) {
+            setIsFavorited(true);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    if (session) {
+      checkFavorite();
+    }
+  }, [session, resort.id]);
+
+  const toggleFavorite = async () => {
+    if (!session) {
+      router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+
+    setIsFavorited(prev => !prev);
+
+    try {
+      const res = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resortId: resort.id })
+      });
+      const data = await res.json();
+      if (!res.ok && data.loginRequired) {
+        router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname));
+      } else if (data.favoriteIds) {
+        setIsFavorited(data.favoriteIds.includes(resort.id));
+      }
+    } catch (e) {
+      console.error('Error toggling favorite:', e);
+    }
+  };
 
   // Date Helper utilities
   const getTodayStr = () => new Date().toISOString().split('T')[0];
@@ -198,7 +245,7 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12 animate-fade-in relative z-10 text-[#E5E5E5]">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8 space-y-8 sm:space-y-12 animate-fade-in relative z-10 text-[#E5E5E5] overflow-x-hidden w-full">
       
       {/* Back button */}
       <button 
@@ -210,20 +257,19 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
       </button>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
         
         {/* Left Column (Resort Detail & Images Slider) */}
-        <div className="lg:col-span-7 space-y-8">
+        <div className="lg:col-span-7 space-y-6 sm:space-y-8">
           
           {/* Images Slider */}
           <div className="relative rounded-3xl overflow-hidden aspect-[16/10] bg-[#141414] border border-white/5 shadow-2xl">
-            <img 
-              src={resort.images[activeImageIdx] || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=800'} 
+            <SafeImage
+              src={resort.images[activeImageIdx]} 
               alt={resort.name} 
-              onError={(e) => {
-                e.currentTarget.src = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=800';
-              }}
-              className="w-full h-full object-cover"
+              fill
+              priority
+              className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
 
@@ -251,13 +297,11 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
                   idx === activeImageIdx ? 'border-brand-accent scale-[0.98]' : 'border-white/5 opacity-60 hover:opacity-100'
                 }`}
               >
-                <img 
+                <SafeImage 
                   src={img} 
                   alt={`${resort.name} detail view ${idx + 1}`} 
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=600';
-                  }}
-                  className="w-full h-full object-cover" 
+                  fill
+                  className="object-cover" 
                 />
               </div>
             ))}
@@ -273,10 +317,23 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
                   <span>{resort.location}</span>
                 </div>
               </div>
-              <div className="bg-[#1A1A1A] border border-brand-accent/20 rounded-2xl px-4 py-2 flex items-center gap-1.5 self-start shadow-md">
-                <Star className="h-4 w-4 fill-brand-accent text-brand-accent" />
-                <span className="font-extrabold text-brand-accent text-sm">{resort.rating.toFixed(1)}</span>
-                <span className="text-[10px] text-[#8a8a8a] font-bold uppercase ml-1">Rating</span>
+              <div className="flex items-center gap-3 self-start">
+                <button
+                  onClick={toggleFavorite}
+                  className={`p-3 rounded-2xl border transition-all active:scale-95 cursor-pointer flex items-center justify-center ${
+                    isFavorited 
+                      ? 'bg-rose-500/20 border-rose-500/50 text-rose-500' 
+                      : 'bg-[#1A1A1A] border-white/10 text-stone-400 hover:text-white hover:border-white/20'
+                  }`}
+                  title={isFavorited ? "Remove from Favorites" : "Save to Favorites"}
+                >
+                  <Heart className={`h-5 w-5 ${isFavorited ? 'fill-rose-500 text-rose-500' : ''}`} />
+                </button>
+                <div className="bg-[#1A1A1A] border border-brand-accent/20 rounded-2xl px-4 py-2 flex items-center gap-1.5 shadow-md">
+                  <Star className="h-4 w-4 fill-brand-accent text-brand-accent" />
+                  <span className="font-extrabold text-brand-accent text-sm">{resort.rating.toFixed(1)}</span>
+                  <span className="text-[10px] text-[#8a8a8a] font-bold uppercase ml-1">Rating</span>
+                </div>
               </div>
             </div>
 
@@ -321,7 +378,7 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
 
         {/* Right Column (Live Invoice & Date Selector Panel) */}
         <div className="lg:col-span-5">
-          <div className="bg-[#1A1A1A]/90 backdrop-blur-xl p-6 sm:p-8 rounded-3xl space-y-6 sticky top-[110px] shadow-2xl border border-white/10 relative overflow-hidden">
+          <div className="bg-[#1A1A1A]/90 backdrop-blur-xl p-5 sm:p-8 rounded-3xl space-y-6 sticky top-[110px] shadow-2xl border border-white/10 relative overflow-hidden">
             
             {/* Subtle luxury glow effect behind card header */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none" />
@@ -345,7 +402,7 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
             <form onSubmit={handleBookingSubmit} className="space-y-6 text-xs">
               
               {/* Dates Selection */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400 mb-1.5">
                     Check-In Date

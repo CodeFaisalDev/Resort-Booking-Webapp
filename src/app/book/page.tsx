@@ -21,6 +21,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { ResortGridSkeleton } from '@/components/SkeletonLoaders';
+import SafeImage from '@/components/SafeImage';
 
 const ResortMap = dynamic(() => import('@/components/ResortMap'), {
   ssr: false,
@@ -165,27 +166,62 @@ export default function BookPage() {
   const activeFiltersCount = (minRating > 0 ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < 2000 ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-[#141414] text-[#E5E5E5] w-full relative">
+    <div className="min-h-screen bg-[#141414] text-[#E5E5E5] w-full relative overflow-x-hidden">
 
       {/* ─── STICKY HEADER / FILTER BAR ─── */}
       <div className="sticky top-0 z-30 bg-[#141414]/95 backdrop-blur-xl border-b border-white/5">
-        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-4">
+        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           
           {/* Top row: brand + search + filter toggle */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2.5 shrink-0">
-              <Compass className="h-7 w-7 text-brand-accent animate-spin-slow" />
-              <div className="hidden sm:block">
-                <h1 className="font-heading text-base font-normal text-white uppercase tracking-wider leading-tight">
-                  Explore & Book
-                </h1>
-                <span className="text-[9px] text-[#8a8a8a] font-bold uppercase tracking-wider">
-                  {totalResorts} properties
-                </span>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+            
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 shrink-0">
+                <Compass className="h-6 w-6 sm:h-7 sm:w-7 text-brand-accent animate-spin-slow" />
+                <div>
+                  <h1 className="font-heading text-xs sm:text-base font-normal text-white uppercase tracking-wider leading-tight">
+                    Explore & Book
+                  </h1>
+                  <span className="text-[9px] text-[#8a8a8a] font-bold uppercase tracking-wider block">
+                    {totalResorts} properties
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile controls (Filter & Sort) */}
+              <div className="flex sm:hidden items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`relative flex items-center gap-1.5 px-3 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
+                    showFilters || activeFiltersCount > 0
+                      ? 'border-brand-accent/40 bg-brand-accent/10 text-brand-accent'
+                      : 'border-white/10 bg-white/5 text-[#A0A0A0] hover:text-white'
+                  }`}
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  {activeFiltersCount > 0 && (
+                    <span className="bg-brand-accent text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </button>
+                <div className="relative shrink-0">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="appearance-none bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider text-[#A0A0A0] px-3 py-2 pr-6 rounded-full outline-none cursor-pointer"
+                  >
+                    <option value="rating">Rated</option>
+                    <option value="price-low">Price ↑</option>
+                    <option value="price-high">Price ↓</option>
+                    <option value="name">A → Z</option>
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#555] pointer-events-none" />
+                </div>
               </div>
             </div>
 
-            <form onSubmit={handleSearchSubmit} className="flex-grow max-w-xl bg-[#1A1A1A]/80 border border-white/5 rounded-full p-1 flex items-center focus-within:border-brand-accent/40 transition-colors">
+            <form onSubmit={handleSearchSubmit} className="w-full sm:max-w-xl bg-[#1A1A1A]/80 border border-white/5 rounded-full p-1 flex items-center focus-within:border-brand-accent/40 transition-colors">
               <div className="flex items-center gap-2 pl-3 flex-grow">
                 <Search className="h-4 w-4 text-[#555] shrink-0" />
                 <input
@@ -201,37 +237,38 @@ export default function BookPage() {
               </button>
             </form>
 
-            {/* Filter & Sort toggles */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`relative flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0 ${
-                showFilters || activeFiltersCount > 0
-                  ? 'border-brand-accent/40 bg-brand-accent/10 text-brand-accent'
-                  : 'border-white/10 bg-white/5 text-[#A0A0A0] hover:text-white hover:border-white/20'
-              }`}
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Filters</span>
-              {activeFiltersCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-brand-accent text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
-
-            {/* Sort dropdown */}
-            <div className="relative shrink-0">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="appearance-none bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider text-[#A0A0A0] px-4 py-2.5 pr-8 rounded-full outline-none cursor-pointer hover:border-white/20 hover:text-white transition-all"
+            {/* Desktop Filter & Sort toggles */}
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  showFilters || activeFiltersCount > 0
+                    ? 'border-brand-accent/40 bg-brand-accent/10 text-brand-accent'
+                    : 'border-white/10 bg-white/5 text-[#A0A0A0] hover:text-white hover:border-white/20'
+                }`}
               >
-                <option value="rating">Top Rated</option>
-                <option value="price-low">Price: Low → High</option>
-                <option value="price-high">Price: High → Low</option>
-                <option value="name">A → Z</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-[#555] pointer-events-none" />
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-brand-accent text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+
+              <div className="relative shrink-0">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="appearance-none bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider text-[#A0A0A0] px-4 py-2.5 pr-8 rounded-full outline-none cursor-pointer hover:border-white/20 hover:text-white transition-all"
+                >
+                  <option value="rating">Top Rated</option>
+                  <option value="price-low">Price: Low → High</option>
+                  <option value="price-high">Price: High → Low</option>
+                  <option value="name">A → Z</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-[#555] pointer-events-none" />
+              </div>
             </div>
           </div>
 
@@ -366,10 +403,11 @@ export default function BookPage() {
                   >
                     {/* Image Carousel */}
                     <div className="relative h-48 sm:h-52 overflow-hidden">
-                      <img
+                      <SafeImage
                         src={images[imgIdx]}
                         alt={r.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
 

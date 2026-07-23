@@ -29,9 +29,11 @@ export default function SmoothScroll() {
     forceCleanupStyles();
     window.scrollTo(0, 0);
 
-    // Dashboard pages use fixed-viewport inner scrolling — Lenis must NOT run there
-    if (pathname?.startsWith('/dashboard')) {
-      // Guarantee standard browser scrolling is available if dashboard inner panel needs it
+    // Skip Lenis on mobile devices for max touch performance & speed
+    const isMobile = window.innerWidth < 768 || 'ontouchstart' in window;
+
+    // Dashboard pages & mobile viewports use native browser scrolling
+    if (pathname?.startsWith('/dashboard') || isMobile) {
       document.documentElement.style.overflow = 'auto';
       document.body.style.overflow = 'auto';
       return;
@@ -60,7 +62,11 @@ export default function SmoothScroll() {
 
       // Sync Lenis → GSAP ScrollTrigger
       lenis.on('scroll', () => {
-        ScrollTrigger.update();
+        try {
+          ScrollTrigger.update();
+        } catch (e) {
+          // ignore stale scope triggers
+        }
       });
 
       const updateTicker = (time: number) => {
@@ -77,7 +83,9 @@ export default function SmoothScroll() {
       resizeObserver = new ResizeObserver(() => {
         if (lenisRef.current) {
           lenisRef.current.resize();
-          ScrollTrigger.refresh();
+          try {
+            ScrollTrigger.refresh();
+          } catch (e) {}
         }
       });
       resizeObserver.observe(document.body);
@@ -86,7 +94,9 @@ export default function SmoothScroll() {
       setTimeout(() => {
         if (lenisRef.current) {
           lenisRef.current.resize();
-          ScrollTrigger.refresh();
+          try {
+            ScrollTrigger.refresh();
+          } catch (e) {}
         }
       }, 200);
 
@@ -111,7 +121,9 @@ export default function SmoothScroll() {
         lenisRef.current = null;
       }
       forceCleanupStyles();
-      ScrollTrigger.refresh();
+      try {
+        ScrollTrigger.refresh();
+      } catch (e) {}
     };
   }, [pathname]);
 

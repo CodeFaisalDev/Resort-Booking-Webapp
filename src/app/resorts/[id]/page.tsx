@@ -25,8 +25,6 @@ import {
   Loader2,
   ArrowRight
 } from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 
 interface RoomType {
   id: string;
@@ -150,33 +148,25 @@ export default function PublicResortDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0c0a09] text-white flex flex-col justify-between">
-        <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 py-32">
-          <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
-          <p className="text-stone-400 font-mono text-xs uppercase tracking-widest">Loading Luxury Resort Experience...</p>
-        </div>
-        <Footer />
+      <div className="min-h-screen bg-[#0c0a09] text-white flex flex-col justify-center items-center gap-4 py-32 px-4">
+        <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+        <p className="text-stone-400 font-mono text-xs uppercase tracking-widest">Loading Luxury Resort Experience...</p>
       </div>
     );
   }
 
   if (error || !resort) {
     return (
-      <div className="min-h-screen bg-[#0c0a09] text-white flex flex-col justify-between">
-        <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 py-32 px-4 text-center">
-          <AlertCircle className="w-12 h-12 text-rose-500" />
-          <h2 className="text-2xl font-serif font-bold text-white">Resort Not Found</h2>
-          <p className="text-stone-400 max-w-md text-sm">{error || 'The requested resort destination is unavailable.'}</p>
-          <button 
-            onClick={() => router.push('/resorts')}
-            className="mt-4 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold uppercase tracking-wider text-xs rounded-xl transition-all"
-          >
-            Explore All Resorts
-          </button>
-        </div>
-        <Footer />
+      <div className="min-h-screen bg-[#0c0a09] text-white flex flex-col justify-center items-center gap-4 py-32 px-4 text-center">
+        <AlertCircle className="w-12 h-12 text-rose-500" />
+        <h2 className="text-2xl font-serif font-bold text-white">Resort Not Found</h2>
+        <p className="text-stone-400 max-w-md text-sm">{error || 'The requested resort destination is unavailable.'}</p>
+        <button 
+          onClick={() => router.push('/resorts')}
+          className="mt-4 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold uppercase tracking-wider text-xs rounded-xl transition-all cursor-pointer"
+        >
+          Explore All Resorts
+        </button>
       </div>
     );
   }
@@ -193,8 +183,7 @@ export default function PublicResortDetailPage() {
   const uniqueRoomTypes = Object.values(roomTypesMap);
 
   return (
-    <div className="min-h-screen bg-[#0c0a09] text-white font-sans selection:bg-amber-500 selection:text-stone-950">
-      <Navbar />
+    <div className="min-h-screen bg-[#0c0a09] text-white font-sans selection:bg-amber-500 selection:text-stone-950 overflow-x-hidden w-full">
 
       {/* Main Container */}
       <main className="pt-24 pb-20 px-4 sm:px-8 max-w-7xl mx-auto">
@@ -615,8 +604,6 @@ export default function PublicResortDetailPage() {
           </div>
         </div>
       )}
-
-      <Footer />
     </div>
   );
 }

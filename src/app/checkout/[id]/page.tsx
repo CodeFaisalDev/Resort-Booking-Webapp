@@ -21,8 +21,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 
 interface ServiceDetails {
   id: string;
@@ -164,35 +162,27 @@ export default function CheckoutPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0c0a09] text-white flex flex-col justify-between">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center p-4 py-28">
-          <div className="bg-stone-900 border border-stone-800 max-w-md w-full p-8 rounded-3xl text-center shadow-2xl space-y-4">
-            <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
-            <h2 className="text-xl font-serif font-bold text-white">Checkout Notice</h2>
-            <p className="text-rose-400 text-xs font-medium leading-relaxed">{error}</p>
-            <button 
-              onClick={() => { setError(''); router.push('/dashboard'); }} 
-              className="w-full rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 py-3.5 font-bold uppercase text-xs tracking-wider cursor-pointer shadow-lg transition-all"
-            >
-              Return to Dashboard
-            </button>
-          </div>
+      <div className="min-h-screen bg-[#0c0a09] text-white flex flex-col justify-center items-center p-4 py-28">
+        <div className="bg-stone-900 border border-stone-800 max-w-md w-full p-6 sm:p-8 rounded-3xl text-center shadow-2xl space-y-4">
+          <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
+          <h2 className="text-xl font-serif font-bold text-white">Checkout Notice</h2>
+          <p className="text-rose-400 text-xs font-medium leading-relaxed">{error}</p>
+          <button 
+            onClick={() => { setError(''); router.push('/dashboard'); }} 
+            className="w-full rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 py-3.5 font-bold uppercase text-xs tracking-wider cursor-pointer shadow-lg transition-all"
+          >
+            Return to Dashboard
+          </button>
         </div>
-        <Footer />
       </div>
     );
   }
 
   if (!resDetails) {
     return (
-      <div className="min-h-screen bg-[#0c0a09] text-white flex flex-col justify-between">
-        <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 py-32">
-          <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
-          <p className="text-stone-400 text-xs font-mono uppercase tracking-widest">Preparing Luxury Checkout Session...</p>
-        </div>
-        <Footer />
+      <div className="min-h-screen bg-[#0c0a09] text-white flex flex-col justify-center items-center gap-3 py-32">
+        <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+        <p className="text-stone-400 text-xs font-mono uppercase tracking-widest">Preparing Luxury Checkout Session...</p>
       </div>
     );
   }
@@ -208,8 +198,7 @@ export default function CheckoutPage() {
   const taxes = Math.max(0, grandTotal - calculatedSubtotal);
 
   return (
-    <div className="min-h-screen bg-[#0c0a09] text-white font-sans selection:bg-amber-500 selection:text-stone-950 flex flex-col justify-between">
-      <Navbar />
+    <div className="min-h-screen bg-[#0c0a09] text-white font-sans selection:bg-amber-500 selection:text-stone-950 flex flex-col justify-between overflow-x-hidden w-full">
 
       <main className="flex-1 pt-28 pb-20 px-4 sm:px-8 max-w-6xl mx-auto w-full">
         
@@ -470,8 +459,6 @@ export default function CheckoutPage() {
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

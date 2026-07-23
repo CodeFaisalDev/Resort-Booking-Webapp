@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
 
 const geistSans = Geist({
@@ -68,24 +69,23 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${geistSans.className} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
-        {/* DNS prefetch for external resources */}
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        {/* Preconnect & DNS prefetch for maps and images */}
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
-        
-        {/* Preconnect for critical third-party origins */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="" />
       </head>
-      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+      <body className={`${geistSans.className} min-h-full flex flex-col overflow-x-hidden`} suppressHydrationWarning>
         <SessionProviderWrapper>
           <SmoothScroll />
           <Navbar />
-          {children}
+          <main className="flex-1 w-full flex flex-col">
+            {children}
+          </main>
+          <Footer />
         </SessionProviderWrapper>
       </body>
     </html>

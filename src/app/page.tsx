@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { ResortGridSkeleton } from '@/components/SkeletonLoaders';
+import SafeImage from '@/components/SafeImage';
 
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -354,22 +355,25 @@ export default function HomePage() {
           }, '-=0.5');
         }
 
-        // ─── 2. FIXED BACKDROP PARALLAX ZOOM ───
-        gsap.to('.fixed-backdrop-bg', {
-          scale: 1.2,
-          y: 80,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: rootRef.current,
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: true
-          }
-        });
+        const isMobile = window.innerWidth < 768 || 'ontouchstart' in window;
+        if (!isMobile) {
+          // ─── 2. FIXED BACKDROP PARALLAX ZOOM ───
+          gsap.to('.fixed-backdrop-bg', {
+            scale: 1.2,
+            y: 80,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: rootRef.current,
+              start: 'top top',
+              end: 'bottom bottom',
+              scrub: true
+            }
+          });
+        }
 
         // ─── 3. HERO MOUSE-MOVE PARALLAX & TILT ───
         const hero = heroPinRef.current;
-        if (hero) {
+        if (hero && !isMobile) {
           const onMouseMove = (e: MouseEvent) => {
             const rect = hero.getBoundingClientRect();
             const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2);
@@ -644,11 +648,49 @@ export default function HomePage() {
     }, 1200);
   };
 
-  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+  useEffect(() => {
+    async function loadFavorites() {
+      try {
+        const res = await fetch('/api/favorites');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.favoriteIds) setFavorites(data.favoriteIds);
+        }
+      } catch (e) {
+        console.error('Error loading favorites:', e);
+      }
+    }
+    if (session) {
+      loadFavorites();
+    }
+  }, [session]);
+
+  const toggleFavorite = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!session) {
+      router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+
     setFavorites(prev => 
       prev.includes(id) ? prev.filter(favId => favId !== id) : [...prev, id]
     );
+
+    try {
+      const res = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resortId: id })
+      });
+      const data = await res.json();
+      if (!res.ok && data.loginRequired) {
+        router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname));
+      } else if (data.favoriteIds) {
+        setFavorites(data.favoriteIds);
+      }
+    } catch (e) {
+      console.error('Error toggling favorite:', e);
+    }
   };
 
   const getFormattedGuests = () => {
@@ -815,6 +857,7 @@ export default function HomePage() {
 
         {/* Scattered 3D Floating Cards (Rendered behind text using z-10) */}
         {/* Card 1: Maldives */}
+        {/* Card 1: Maldives */}
         <div 
           onClick={() => setSelectedCard({
             src: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=1200',
@@ -823,7 +866,9 @@ export default function HomePage() {
           })}
           className="hero-animate-card floating-card-1 absolute top-[14%] right-[5%] w-[220px] h-[300px] rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-[#1A1A1A]/85 backdrop-blur-sm z-10 cursor-pointer hidden lg:block hover:border-brand-accent transition-all duration-300 pointer-events-auto -rotate-6 hover:scale-[1.03]"
         >
-          <img src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=400" alt="Maldives" className="w-full h-44 object-cover border-b border-white/5" />
+          <div className="relative w-full h-44 border-b border-white/5">
+            <SafeImage src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&q=80&w=400" alt="Maldives" fill className="object-cover" />
+          </div>
           <div className="p-4 text-left">
             <span className="text-[8px] font-black text-brand-accent tracking-widest block uppercase">Premium Sanctuary</span>
             <span className="text-xs font-bold text-white mt-1 block">Lagoon Overwater Villa</span>
@@ -840,7 +885,9 @@ export default function HomePage() {
           })}
           className="hero-animate-card floating-card-2 absolute bottom-[14%] right-[6%] w-[220px] h-[300px] rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-[#1A1A1A]/90 backdrop-blur-sm z-10 cursor-pointer hidden lg:block hover:border-brand-accent transition-all duration-300 pointer-events-auto rotate-6 hover:scale-[1.03]"
         >
-          <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=400" alt="Bali" className="w-full h-44 object-cover border-b border-white/5" />
+          <div className="relative w-full h-44 border-b border-white/5">
+            <SafeImage src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=400" alt="Bali" fill className="object-cover" />
+          </div>
           <div className="p-4 text-left">
             <span className="text-[8px] font-black text-brand-accent tracking-widest block uppercase">Jungle Seclusion</span>
             <span className="text-xs font-bold text-white mt-1 block">Volcanic Teak Retreat</span>
@@ -857,7 +904,9 @@ export default function HomePage() {
           })}
           className="hero-animate-card floating-card-3 absolute bottom-[10%] left-[5%] w-[220px] h-[300px] rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-[#1A1A1A]/95 backdrop-blur-sm z-10 cursor-pointer hidden lg:block hover:border-brand-accent transition-all duration-300 pointer-events-auto -rotate-10 hover:scale-[1.03]"
         >
-          <img src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=400" alt="Aspen" className="w-full h-44 object-cover border-b border-white/5" />
+          <div className="relative w-full h-44 border-b border-white/5">
+            <SafeImage src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=400" alt="Aspen" fill className="object-cover" />
+          </div>
           <div className="p-4 text-left">
             <span className="text-[8px] font-black text-brand-accent tracking-widest block uppercase">Winter Oasis</span>
             <span className="text-xs font-bold text-white mt-1 block">Thermal Alpine Chalet</span>
@@ -874,7 +923,9 @@ export default function HomePage() {
           })}
           className="hero-animate-card floating-card-4 absolute top-[12%] left-[6%] w-[220px] h-[300px] rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-[#1A1A1A]/85 backdrop-blur-sm z-10 cursor-pointer hidden lg:block hover:border-brand-accent transition-all duration-300 pointer-events-auto rotate-[12deg] hover:scale-[1.03]"
         >
-          <img src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=400" alt="Santorini" className="w-full h-44 object-cover border-b border-white/5" />
+          <div className="relative w-full h-44 border-b border-white/5">
+            <SafeImage src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&q=80&w=400" alt="Santorini" fill className="object-cover" />
+          </div>
           <div className="p-4 text-left">
             <span className="text-[8px] font-black text-brand-accent tracking-widest block uppercase">Cliffside Escape</span>
             <span className="text-xs font-bold text-white mt-1 block">Santorini Cliffside Cave</span>
@@ -891,7 +942,9 @@ export default function HomePage() {
           })}
           className="hero-animate-card floating-card-5 absolute top-[44%] right-[24%] w-[220px] h-[300px] rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-[#1A1A1A]/90 backdrop-blur-sm z-10 cursor-pointer hidden lg:block hover:border-brand-accent transition-all duration-300 pointer-events-auto -rotate-4 hover:scale-[1.03]"
         >
-          <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&q=80&w=400" alt="Dubai" className="w-full h-44 object-cover border-b border-white/5" />
+          <div className="relative w-full h-44 border-b border-white/5">
+            <SafeImage src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&q=80&w=400" alt="Dubai" fill className="object-cover" />
+          </div>
           <div className="p-4 text-left">
             <span className="text-[8px] font-black text-brand-accent tracking-widest block uppercase">Modern Sanctuary</span>
             <span className="text-xs font-bold text-white mt-1 block">Royal Ocean Sanctuary</span>
@@ -1167,13 +1220,14 @@ export default function HomePage() {
             
             {/* Dining Backdrop Image Block */}
             <div className="lg:col-span-5 relative rounded-3xl overflow-hidden min-h-[300px] border border-white/10">
-              <img 
+              <SafeImage 
                 src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=800" 
                 alt="Culinary dining setup" 
-                className="parallax-image absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105" 
+                fill
+                className="parallax-image object-cover transition-transform duration-700 hover:scale-105" 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6">
+              <div className="absolute bottom-6 left-6 right-6 z-10">
                 <span className="text-[9px] font-bold text-brand-accent uppercase tracking-widest block mb-1">LOCAL INGREDIENTS</span>
                 <span className="text-sm font-bold text-white block">Sourced Fresh from Island Organic Farms</span>
               </div>
@@ -1266,7 +1320,7 @@ export default function HomePage() {
           {/* Interactive display board */}
           <div className="lg:col-span-7 bg-[#1A1A1A] border border-white/10 rounded-3xl p-8 flex flex-col md:flex-row gap-6 min-h-[380px] order-1 lg:order-2">
             <div className="flex-1 relative rounded-2xl overflow-hidden border border-white/10 h-48 md:h-auto select-none">
-              <img 
+              <SafeImage 
                 src={
                   activeSpaService === 'massage' 
                     ? 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=600'
@@ -1275,7 +1329,8 @@ export default function HomePage() {
                     : 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=600'
                 } 
                 alt="Spa service render" 
-                className="parallax-image absolute inset-0 w-full h-full object-cover" 
+                fill
+                className="parallax-image object-cover" 
               />
             </div>
             
@@ -1598,10 +1653,11 @@ export default function HomePage() {
                 onClick={() => router.push(`/resorts?query=${encodeURIComponent(dest.name)}`)}
                 className="relative shrink-0 w-[240px] md:w-[280px] h-[340px] rounded-2xl overflow-hidden cursor-pointer group border border-white/10"
               >
-                <img 
+                <SafeImage 
                   src={dest.img} 
                   alt={dest.name} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" 
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.03]" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d]/80 via-transparent to-transparent" />
                 

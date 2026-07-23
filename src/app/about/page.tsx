@@ -29,30 +29,30 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#141414] text-[#E5E5E5] pb-20 pt-24 relative overflow-hidden">
+    <div className="w-full min-h-screen bg-[#141414] text-[#E5E5E5] pb-16 sm:pb-20 pt-24 sm:pt-28 relative overflow-x-hidden">
       
       {/* Glow Backdrops */}
       <div className="absolute top-[20%] left-[-10%] w-[400px] h-[400px] bg-brand-accent/5 rounded-full blur-[120px] pointer-events-none -z-10" />
       <div className="absolute bottom-[20%] right-[-10%] w-[400px] h-[400px] bg-brand-accent/5 rounded-full blur-[120px] pointer-events-none -z-10" />
 
       {/* 1. Header Banner */}
-      <section className="py-16 px-4 sm:px-8 text-center space-y-4 relative z-10">
+      <section className="py-10 sm:py-16 px-4 sm:px-8 text-center space-y-4 relative z-10 max-w-4xl mx-auto">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent border border-brand-accent/20">
           <span>BOOKME Concierge</span>
         </div>
-        <h1 className="font-heading text-4xl sm:text-6xl font-normal tracking-tight text-white leading-tight">
+        <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-white leading-tight px-2">
           Contact Customer Services
         </h1>
-        <p className="mx-auto max-w-xl text-[#A0A0A0] text-xs sm:text-sm font-medium leading-relaxed">
+        <p className="mx-auto max-w-xl text-[#A0A0A0] text-xs sm:text-sm font-medium leading-relaxed px-2">
           Our global operations team and resort concierges are available 24/7. Connect with us for custom spa arrangements, airport charters, or group reservations.
         </p>
       </section>
  
       {/* 2. Main Content */}
-      <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
+      <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-10 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 relative z-10">
         
         {/* Left Column: Support Form */}
-        <div className="bg-[#1A1A1A]/80 backdrop-blur-md rounded-[32px] p-8 border border-white/5 shadow-2xl space-y-6">
+        <div className="bg-[#1A1A1A]/80 backdrop-blur-md rounded-3xl p-5 sm:p-8 border border-white/5 shadow-2xl space-y-6">
           <div>
             <h2 className="font-sans text-xl font-bold text-white">Submit Support Ticket</h2>
             <span className="text-[10px] text-[#8a8a8a] font-bold uppercase tracking-wider block mt-1">Fast concierge responses</span>

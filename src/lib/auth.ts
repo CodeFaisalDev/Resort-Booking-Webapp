@@ -1,10 +1,15 @@
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./db";
 import bcrypt from "bcryptjs";
 import { AuthOptions } from "next-auth";
 
 export const authOptions: AuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -52,11 +57,39 @@ export const authOptions: AuthOptions = {
     })
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        if (!user.email) return false;
+        
+        let guest = await prisma.guest.findUnique({
+          where: { email: user.email }
+        });
+
+        if (!guest) {
+          guest = await prisma.guest.create({
+            data: {
+              fullName: user.name || 'Google Guest',
+              email: user.email,
+              password: '', // OAuth users do not use passwords
+              phone: '',
+              nationality: '',
+              idProofNum: '',
+              isVerified: true
+            }
+          });
+        }
+
+        user.id = guest.id;
+        (user as any).role = 'GUEST';
+        (user as any).type = 'guest';
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
-        token.type = (user as any).type;
+        token.role = (user as any).role || 'GUEST';
+        token.type = (user as any).type || 'guest';
         token.department = (user as any).department;
       }
       return token;
