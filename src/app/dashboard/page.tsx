@@ -154,6 +154,9 @@ export default function DashboardPage() {
   const [newServicePrice, setNewServicePrice] = useState('');
   const [serviceMsg, setServiceMsg] = useState('');
   const [serviceLoading, setServiceLoading] = useState(false);
+  const [servicePage, setServicePage] = useState(1);
+  const [servicePageSize, setServicePageSize] = useState(8);
+  const [deletingServiceId, setDeletingServiceId] = useState<string | null>(null);
 
   // Department CRUD states
   const [deptModalOpen, setDeptModalOpen] = useState(false);
@@ -246,33 +249,37 @@ export default function DashboardPage() {
   // Bookings Desk
   const fetchBookingsData = useCallback(async (force = false) => {
     if (!force && dashboardCache.has('bookings')) {
-      setAdminBookings(dashboardCache.get('bookings') || []);
+      const cached = dashboardCache.get('bookings');
+      setAdminBookings(Array.isArray(cached) ? cached : []);
       return;
     }
     setTabLoading(true);
     try {
       const res = await fetch('/api/admin/bookings');
       const data = await res.json();
-      setAdminBookings(data || []);
-      dashboardCache.set('bookings', data || []);
-    } catch (e) { console.error(e); }
+      const valid = Array.isArray(data) ? data : [];
+      setAdminBookings(valid);
+      if (Array.isArray(data)) dashboardCache.set('bookings', valid);
+    } catch (e) { console.error(e); setAdminBookings([]); }
     finally { setTabLoading(false); }
   }, []);
 
   // Departments
   const fetchDeptsData = useCallback(async (force = false) => {
     if (!force && dashboardCache.has('depts')) {
-      setDepts(dashboardCache.get('depts') || []);
+      const cached = dashboardCache.get('depts');
+      setDepts(Array.isArray(cached) ? cached : []);
       return;
     }
     setTabLoading(true);
     try {
       const res = await fetch('/api/admin/departments');
       const data = await res.json();
-      setDepts(data || []);
-      if (data?.length > 0) setNewStaffDeptId(data[0].id);
-      dashboardCache.set('depts', data || []);
-    } catch (e) { console.error(e); }
+      const valid = Array.isArray(data) ? data : [];
+      setDepts(valid);
+      if (valid.length > 0) setNewStaffDeptId(valid[0].id);
+      if (Array.isArray(data)) dashboardCache.set('depts', valid);
+    } catch (e) { console.error(e); setDepts([]); }
     finally { setTabLoading(false); }
   }, []);
 
@@ -282,8 +289,8 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/admin/roles');
       const data = await res.json();
-      setRolesList(data.roles || []);
-    } catch (e) { console.error(e); }
+      setRolesList(Array.isArray(data?.roles) ? data.roles : []);
+    } catch (e) { console.error(e); setRolesList([]); }
     finally { setTabLoading(false); }
   }, []);
 
@@ -293,15 +300,16 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/admin/services');
       const data = await res.json();
-      setServicesList(data.services || []);
-    } catch (e) { console.error(e); }
+      setServicesList(Array.isArray(data?.services) ? data.services : []);
+    } catch (e) { console.error(e); setServicesList([]); }
     finally { setTabLoading(false); }
   }, []);
 
   // Staffing
   const fetchStaffData = useCallback(async (force = false) => {
     if (!force && dashboardCache.has('staff')) {
-      setStaffsList(dashboardCache.get('staff') || []);
+      const cached = dashboardCache.get('staff');
+      setStaffsList(Array.isArray(cached) ? cached : []);
       return;
     }
     setTabLoading(true);
@@ -311,15 +319,17 @@ export default function DashboardPage() {
         depts.length === 0 ? fetch('/api/admin/departments') : Promise.resolve(null)
       ]);
       const sData = await sRes.json();
-      setStaffsList(sData || []);
-      dashboardCache.set('staff', sData || []);
+      const validStaff = Array.isArray(sData) ? sData : [];
+      setStaffsList(validStaff);
+      if (Array.isArray(sData)) dashboardCache.set('staff', validStaff);
       if (dRes) {
         const dData = await dRes.json();
-        setDepts(dData || []);
-        dashboardCache.set('depts', dData || []);
-        if (dData?.length > 0) setNewStaffDeptId(dData[0].id);
+        const validDepts = Array.isArray(dData) ? dData : [];
+        setDepts(validDepts);
+        if (Array.isArray(dData)) dashboardCache.set('depts', validDepts);
+        if (validDepts.length > 0) setNewStaffDeptId(validDepts[0].id);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error(e); setStaffsList([]); }
     finally { setTabLoading(false); }
   }, [depts.length]);
 
@@ -792,6 +802,7 @@ export default function DashboardPage() {
 
   // Bookings Desk: Filtered & Paginated
   const filteredBookings = useMemo(() => {
+    if (!Array.isArray(adminBookings)) return [];
     return adminBookings.filter((r) => {
       const matchesStatus = bookingFilterStatus === 'ALL' ? true :
         bookingFilterStatus === 'ACTIVE_STAYS' ? (r.status === 'CONFIRMED' && r.room?.status === 'OCCUPIED') :
@@ -810,6 +821,7 @@ export default function DashboardPage() {
 
   // Housekeeping: Filtered & Paginated
   const filteredHkRooms = useMemo(() => {
+    if (!Array.isArray(hkRooms)) return [];
     return hkRooms.filter((r) => {
       const matchesStatus = hkRoomFilter === 'ALL' || r.status === hkRoomFilter;
       const q = hkSearchQuery.toLowerCase();
@@ -825,6 +837,7 @@ export default function DashboardPage() {
 
   // Staffing: Filtered & Paginated
   const filteredStaff = useMemo(() => {
+    if (!Array.isArray(staffsList)) return [];
     return staffsList.filter((s) => {
       const q = staffSearchQuery.toLowerCase();
       const matchesSearch = !q || s.name?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q);
@@ -842,6 +855,7 @@ export default function DashboardPage() {
 
   // Departments: Filtered & Paginated
   const filteredDepts = useMemo(() => {
+    if (!Array.isArray(depts)) return [];
     return depts.filter((d) => {
       const q = deptSearchQuery.toLowerCase();
       return !q || d.name?.toLowerCase().includes(q) || d.managerName?.toLowerCase().includes(q);
@@ -855,6 +869,7 @@ export default function DashboardPage() {
 
   // Finance: Filtered & Paginated Payments
   const allPayments = useMemo(() => {
+    if (!Array.isArray(adminBookings)) return [];
     return adminBookings
       .flatMap((r) => (r.payments || []).map((p: any) => ({ ...p, booking: r })))
       .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime());
@@ -915,6 +930,19 @@ export default function DashboardPage() {
   const paginatedAuditLogs = useMemo(() => {
     return filteredAuditLogs.slice((auditPage - 1) * auditPageSize, auditPage * auditPageSize);
   }, [filteredAuditLogs, auditPage, auditPageSize]);
+
+  // Services: Filtered & Paginated
+  const filteredServices = useMemo(() => {
+    return servicesList.filter((s) => {
+      const q = serviceSearchQuery.toLowerCase();
+      return !q || s.name?.toLowerCase().includes(q) || s.category?.toLowerCase().includes(q) || s.staffName?.toLowerCase().includes(q);
+    });
+  }, [servicesList, serviceSearchQuery]);
+
+  const totalServicePages = Math.ceil(filteredServices.length / servicePageSize) || 1;
+  const paginatedServices = useMemo(() => {
+    return filteredServices.slice((servicePage - 1) * servicePageSize, servicePage * servicePageSize);
+  }, [filteredServices, servicePage, servicePageSize]);
 
   // Resorts: Filtered & Paginated
   const filteredResorts = useMemo(() => {
@@ -1595,6 +1623,78 @@ export default function DashboardPage() {
 
                   {/* Pinned Pagination */}
                   <PaginationFooter currentPage={deptPage} totalPages={totalDeptPages} onPageChange={setDeptPage} totalItems={filteredDepts.length} />
+                </div>
+              )}
+
+              {/* TAB: SERVICES CATALOG */}
+              {activeTab === 'services' && (
+                <div className="bg-[#1A1A1A]/90 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/5 shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
+                  {/* Pinned Toolbar */}
+                  <div className="shrink-0 pb-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h2 className="font-heading text-xl font-normal text-white">Services & Amenities Catalog</h2>
+                      <p className="text-xs text-[#8a8a8a] mt-0.5">Manage luxury resort experiences, spa packages, and guest add-ons</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <Search className="h-3.5 w-3.5 absolute left-3 top-2.5 text-[#8a8a8a]" />
+                        <input
+                          type="text"
+                          placeholder="Search service..."
+                          value={serviceSearchQuery}
+                          onChange={(e) => { setServiceSearchQuery(e.target.value); setServicePage(1); }}
+                          className="bg-white/5 border border-white/10 text-white rounded-xl pl-9 pr-3 py-1.5 text-xs focus:outline-none w-40"
+                        />
+                      </div>
+                      <button onClick={() => setServiceModalOpen(true)} className="bg-brand-accent hover:bg-brand-accent-hover text-white px-4 py-1.5 rounded-xl text-xs uppercase font-bold flex items-center gap-1.5 shadow-lg cursor-pointer">
+                        <Plus className="h-4 w-4" /> Add Service
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Scrollable Table */}
+                  <div className="flex-1 overflow-y-auto min-h-0 py-4 pr-1">
+                    {tabLoading ? (
+                      <DashboardTableSkeleton rows={servicePageSize} cols={5} />
+                    ) : (
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-white/5 text-[#8a8a8a] uppercase tracking-widest font-black sticky top-0 bg-[#1A1A1A]">
+                            <th className="pb-3">Service Name</th>
+                            <th className="pb-3 px-3">Category</th>
+                            <th className="pb-3 px-3">Price</th>
+                            <th className="pb-3 px-3">Assigned Staff</th>
+                            <th className="pb-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-[#A0A0A0] divide-y divide-white/5">
+                          {paginatedServices.map((s) => (
+                            <tr key={s.id} className="hover:bg-white/[0.01]">
+                              <td className="py-3.5 font-bold text-white">{s.name}</td>
+                              <td className="py-3.5 px-3">
+                                <span className="bg-brand-accent/10 text-brand-accent border border-brand-accent/20 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase">{s.category}</span>
+                              </td>
+                              <td className="py-3.5 px-3 font-bold text-green-400">${Number(s.price).toFixed(2)}</td>
+                              <td className="py-3.5 px-3 font-semibold text-white">{s.staffName || 'Unassigned'}</td>
+                              <td className="py-3.5 text-right">
+                                {deletingServiceId === s.id ? (
+                                  <div className="flex justify-end gap-1">
+                                    <button onClick={() => { handleDeleteService(s.id); setDeletingServiceId(null); }} className="bg-red-500 text-white text-[8px] font-bold py-1 px-2 rounded cursor-pointer">Yes</button>
+                                    <button onClick={() => setDeletingServiceId(null)} className="bg-white/10 text-white text-[8px] font-bold py-1 px-2 rounded cursor-pointer">No</button>
+                                  </div>
+                                ) : (
+                                  <button onClick={() => setDeletingServiceId(s.id)} className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 cursor-pointer"><Trash2 className="h-4 w-4" /></button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+
+                  {/* Pinned Pagination */}
+                  <PaginationFooter currentPage={servicePage} totalPages={totalServicePages} onPageChange={setServicePage} totalItems={filteredServices.length} />
                 </div>
               )}
 

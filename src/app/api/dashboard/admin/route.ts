@@ -10,41 +10,45 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. Calculate occupancy & stats
-    const totalRooms = await prisma.room.count();
-    const occupiedRooms = await prisma.room.count({ where: { status: 'OCCUPIED' } });
-    const dirtyRooms = await prisma.room.count({ where: { status: 'DIRTY' } });
-    const maintenanceRooms = await prisma.room.count({ where: { status: 'MAINTENANCE' } });
-    const availableRooms = await prisma.room.count({ where: { status: 'AVAILABLE' } });
-
-    // 2. Financials
-    const payments = await prisma.payment.findMany({
-      include: { guest: true },
-      orderBy: { paidAt: 'desc' },
-      take: 20
-    });
+    // Calculate occupancy, stats, financials, rooms, staff & reservations in parallel
+    const [
+      totalRooms,
+      occupiedRooms,
+      dirtyRooms,
+      maintenanceRooms,
+      availableRooms,
+      payments,
+      rooms,
+      staffList,
+      reservations
+    ] = await Promise.all([
+      prisma.room.count(),
+      prisma.room.count({ where: { status: 'OCCUPIED' } }),
+      prisma.room.count({ where: { status: 'DIRTY' } }),
+      prisma.room.count({ where: { status: 'MAINTENANCE' } }),
+      prisma.room.count({ where: { status: 'AVAILABLE' } }),
+      prisma.payment.findMany({
+        include: { guest: true },
+        orderBy: { paidAt: 'desc' },
+        take: 20
+      }),
+      prisma.room.findMany({
+        include: { roomType: true, resort: true },
+        orderBy: { roomNum: 'asc' }
+      }),
+      prisma.staff.findMany({
+        include: { department: true }
+      }),
+      prisma.reservation.findMany({
+        include: { guest: true, room: true },
+        orderBy: { createdAt: 'desc' },
+        take: 10
+      })
+    ]);
 
     const totalRevenue = payments
       .filter(p => p.status === 'COMPLETED')
       .reduce((sum, p) => sum + Number(p.amount), 0);
-
-    // 3. Room listings
-    const rooms = await prisma.room.findMany({
-      include: { roomType: true, resort: true },
-      orderBy: { roomNum: 'asc' }
-    });
-
-    // 4. Staff listings
-    const staffList = await prisma.staff.findMany({
-      include: { department: true }
-    });
-
-    // 5. Active reservations
-    const reservations = await prisma.reservation.findMany({
-      include: { guest: true, room: true },
-      orderBy: { createdAt: 'desc' },
-      take: 10
-    });
 
     return NextResponse.json({
       stats: {
@@ -61,6 +65,7 @@ export async function GET() {
       reservations
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('API Dashboard Admin Error:', error);
+    return NextResponse.json({ error: error.message || 'Database fetch error' }, { status: 500 });
   }
 }

@@ -60,7 +60,9 @@ export const authOptions: AuthOptions = {
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
         if (!user.email) return false;
-        
+
+        // Strictly search or create in the Guest database table.
+        // Even if a Staff/Admin account exists with this email, Google login ONLY logs in as Guest.
         let guest = await prisma.guest.findUnique({
           where: { email: user.email }
         });
@@ -79,18 +81,27 @@ export const authOptions: AuthOptions = {
           });
         }
 
+        // Force session properties to strictly GUEST
         user.id = guest.id;
         (user as any).role = 'GUEST';
         (user as any).type = 'guest';
+        delete (user as any).department;
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role || 'GUEST';
-        token.type = (user as any).type || 'guest';
-        token.department = (user as any).department;
+        // If logged in via Google, strictly force GUEST role and type
+        if (account?.provider === 'google') {
+          token.role = 'GUEST';
+          token.type = 'guest';
+          delete token.department;
+        } else {
+          token.role = (user as any).role || 'GUEST';
+          token.type = (user as any).type || 'guest';
+          token.department = (user as any).department;
+        }
       }
       return token;
     },
