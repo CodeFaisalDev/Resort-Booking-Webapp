@@ -128,12 +128,12 @@ export async function POST(req: Request) {
 
       const htmlBody = `
         <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #78350f; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+          <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">BOOKME.COM</h2>
           <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Provisional Stay Reservation</p>
           <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
           
           <p>Dear <strong>${reservation.guest.fullName}</strong>,</p>
-          <p>Your stay stay at Luxury Horizon Resort has been provisionally reserved. Please complete your payment details using the checkout link below to guarantee your accommodation.</p>
+          <p>Your stay at bookme.com has been provisionally reserved. Please complete your payment details using the checkout link below to guarantee your accommodation.</p>
           
           <div style="background-color: #1c1917; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #292524;">
             <p style="margin: 5px 0;"><strong>Resort:</strong> ${reservation.room.resort.name} (${reservation.room.resort.location})</p>
@@ -170,7 +170,7 @@ export async function POST(req: Request) {
 
       await sendMail({
         to: reservation.guest.email,
-        subject: 'Stay Reservation Pending - Luxury Horizon Resort',
+        subject: 'Stay Reservation Pending - bookme.com',
         html: htmlBody,
       });
 
@@ -334,7 +334,7 @@ export async function DELETE(req: Request) {
 
       const htmlBody = `
         <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #f87171; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #f87171; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+          <h2 style="color: #f87171; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">BOOKME.COM</h2>
           <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Reservation Canceled & Refund Confirmation</p>
           <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
           
@@ -355,14 +355,14 @@ export async function DELETE(req: Request) {
 
           <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
           <p style="font-size: 12px; color: #78716c; text-align: center;">
-            Refund processing times can vary depending on your bank (usually 5-10 business days). If you have questions, please reach out to reservations@luxuryhorizon.com.
+            Refund processing times can vary depending on your bank (usually 5-10 business days). If you have questions, please reach out to reservations@bookme.com.
           </p>
         </div>
       `;
 
       await sendMail({
         to: updated.guest.email,
-        subject: 'Stay Canceled & Refunded - Luxury Horizon Resort',
+        subject: 'Stay Canceled & Refunded - bookme.com',
         html: htmlBody,
       });
 

@@ -101,7 +101,7 @@ export async function PUT(req: Request) {
 
         const htmlBody = `
           <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #fbbf24; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+            <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">BOOKME.COM</h2>
             <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Check-in Confirmed & Welcome</p>
             <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
             
@@ -118,14 +118,14 @@ export async function PUT(req: Request) {
 
             <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
             <p style="font-size: 12px; color: #78716c; text-align: center;">
-              Enjoy your stay at Luxury Horizon Resort.
+              Enjoy your stay at bookme.com.
             </p>
           </div>
         `;
 
         await sendMail({
           to: reservation.guest.email,
-          subject: 'Check-In Confirmed - Welcome to Luxury Horizon',
+          subject: 'Check-In Confirmed - Welcome to bookme.com',
           html: htmlBody,
         });
 
@@ -156,7 +156,7 @@ export async function PUT(req: Request) {
       try {
         const htmlBody = `
           <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #78716c; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+            <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">BOOKME.COM</h2>
             <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Check-out Complete</p>
             <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
             
@@ -167,14 +167,14 @@ export async function PUT(req: Request) {
 
             <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
             <p style="font-size: 12px; color: #78716c; text-align: center;">
-              Concierge services: concierge@luxuryhorizon.com. We hope to see you again soon.
+              Concierge services: concierge@bookme.com. We hope to see you again soon.
             </p>
           </div>
         `;
 
         await sendMail({
           to: reservation.guest.email,
-          subject: 'Thank You for Staying at Luxury Horizon - Checkout Complete',
+          subject: 'Thank You for Staying at bookme.com - Checkout Complete',
           html: htmlBody,
         });
 
@@ -328,7 +328,7 @@ export async function PUT(req: Request) {
 
         const htmlBody = `
           <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #f87171; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+            <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">BOOKME.COM</h2>
             <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Prorated Stay & Refund Confirmation</p>
             <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
             
@@ -349,14 +349,14 @@ export async function PUT(req: Request) {
 
             <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
             <p style="font-size: 12px; color: #78716c; text-align: center;">
-              Refunds typically take 5-10 business days. For concierge assistance, email concierge@luxuryhorizon.com.
+              Refunds typically take 5-10 business days. For concierge assistance, email concierge@bookme.com.
             </p>
           </div>
         `;
 
         await sendMail({
           to: reservation.guest.email,
-          subject: 'Stay Duration Truncated & Refunded - Luxury Horizon Resort',
+          subject: 'Stay Duration Truncated & Refunded - bookme.com',
           html: htmlBody,
         });
 

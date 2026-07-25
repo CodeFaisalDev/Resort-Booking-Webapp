@@ -38,7 +38,7 @@ export default function AboutPage() {
       {/* 1. Header Banner */}
       <section className="py-10 sm:py-16 px-4 sm:px-8 text-center space-y-4 relative z-10 max-w-4xl mx-auto">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-accent/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent border border-brand-accent/20">
-          <span>BOOKME Concierge</span>
+          <span>bookme.com Concierge</span>
         </div>
         <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-white leading-tight px-2">
           Contact Customer Services
@@ -131,7 +131,7 @@ export default function AboutPage() {
             </div>
             <div>
               <span className="block text-[8px] text-[#8a8a8a] font-bold uppercase tracking-wider">Telephony Support</span>
-              <span className="text-sm font-bold text-white">+1 800-BOOKME-NOW</span>
+              <span className="text-sm font-bold text-white">+1 800-BOOKME-COM</span>
             </div>
           </div>
  

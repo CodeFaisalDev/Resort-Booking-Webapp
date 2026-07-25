@@ -53,7 +53,7 @@ export default function Footer() {
           <div className="space-y-5">
             <Link href="/" className="inline-block group">
               <span className="font-sans text-2xl font-black tracking-tight text-white transition-colors group-hover:text-orange-500">
-                ESKAP<span className="text-orange-500 italic">INN</span>
+                BOOKME<span className="text-orange-500 italic">.COM</span>
               </span>
             </Link>
             <p className="text-[13px] text-stone-500 leading-relaxed max-w-xs font-medium">
@@ -141,13 +141,13 @@ export default function Footer() {
                 <div className="w-8 h-8 rounded-lg bg-stone-900 border border-stone-800 flex items-center justify-center shrink-0">
                   <Phone className="h-3.5 w-3.5 text-orange-500" />
                 </div>
-                <span>+1 800-ESKAP-INN</span>
+                <span>+1 800-BOOKME-COM</span>
               </li>
               <li className="flex items-center gap-2.5 hover:text-stone-300 transition-colors">
                 <div className="w-8 h-8 rounded-lg bg-stone-900 border border-stone-800 flex items-center justify-center shrink-0">
                   <Mail className="h-3.5 w-3.5 text-orange-500" />
                 </div>
-                <span>concierge@eskapinn.com</span>
+                <span>concierge@bookme.com</span>
               </li>
             </ul>
 
@@ -180,7 +180,7 @@ export default function Footer() {
       <div className="border-t border-stone-800/50">
         <div className="mx-auto max-w-7xl px-6 md:px-10 lg:px-16 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[11px] text-stone-600 font-semibold uppercase tracking-wider">
-            © {year} ESKAPINN Group. All rights reserved.
+            © {year} bookme.com. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             {/* Payment method badges */}

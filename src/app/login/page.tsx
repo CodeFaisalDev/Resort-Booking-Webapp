@@ -532,7 +532,7 @@ export default function LoginPage() {
             <div className="text-center select-none">
               <Compass className="mx-auto h-12 w-12 text-brand-accent animate-spin-slow" />
               <h2 className="mt-4 font-heading text-3xl font-normal tracking-tight text-white">
-                {isSignUp ? 'Join Luxury Horizon' : 'Welcome Back'}
+                {isSignUp ? 'Join bookme.com' : 'Welcome Back'}
               </h2>
               <p className="mt-2 text-xs text-[#A0A0A0] font-medium">
                 {isSignUp ? 'Create your profile to start booking' : 'Access your resort reservation engine'}

@@ -1,4 +1,4 @@
-# Project Brief: Luxury Horizon Resort Management System
+# Project Brief: bookme.com Resort Management System
 
 This document outlines the end-to-end technical specification and architecture for the **Online Resort Management System**. The application is designed as a high-performance, responsive, full-stack web application leveraging 3D interactive design aesthetics.
 

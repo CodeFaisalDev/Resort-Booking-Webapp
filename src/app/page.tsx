@@ -1804,7 +1804,7 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between pt-8 border-t border-white/10 text-[10px] text-[#555] gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-              <span>© 2026 Bookme.com. All rights reserved.</span>
+              <span>© 2026 bookme.com. All rights reserved.</span>
               <div className="flex gap-4">
                 <Link href="/about" className="hover:text-stone-300 transition-colors">Terms &amp; Conditions</Link>
                 <Link href="/about" className="hover:text-stone-300 transition-colors">Privacy Policy</Link>

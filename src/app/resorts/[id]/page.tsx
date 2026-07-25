@@ -201,7 +201,7 @@ export default function PublicResortDetailPage() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold uppercase tracking-widest rounded-full">
-                Luxury Horizon Signature Destination
+                bookme.com Signature Destination
               </span>
               <div className="flex items-center gap-1 bg-stone-900 border border-stone-800 px-2.5 py-1 rounded-full text-amber-400 text-xs font-bold">
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -405,7 +405,7 @@ export default function PublicResortDetailPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <h2 className="text-2xl font-serif font-bold text-white mb-1">Guest Experiences & Reviews</h2>
-              <p className="text-stone-400 text-sm">Authentic stays verified by Luxury Horizon Guests</p>
+              <p className="text-stone-400 text-sm">Authentic stays verified by bookme.com Guests</p>
             </div>
 
             <button

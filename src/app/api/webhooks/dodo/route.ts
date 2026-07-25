@@ -155,12 +155,12 @@ export async function POST(req: Request) {
 
       const htmlBody = `
         <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #78350f; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 28px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+          <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 28px; letter-spacing: 2px;">BOOKME.COM</h2>
           <p style="text-align: center; color: #a8a29e; font-size: 14px; text-transform: uppercase;">Invoice & Confirmation Receipt</p>
           <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
           
           <p>Dear <strong>${reservation.guest.fullName}</strong>,</p>
-          <p>We are delighted to confirm your luxury stay at Luxury Horizon Resort. Below is your detailed reservation invoice:</p>
+          <p>We are delighted to confirm your luxury stay at bookme.com. Below is your detailed reservation invoice:</p>
           
           <div style="background-color: #1c1917; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #292524;">
             <p style="margin: 5px 0;"><strong>Resort Location:</strong> ${reservation.room.resort.name} (${reservation.room.resort.location})</p>
@@ -194,7 +194,7 @@ export async function POST(req: Request) {
 
           <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
           <p style="font-size: 12px; color: #78716c; text-align: center;">
-            Thank you for choosing Luxury Horizon. Please contact concierge@luxuryhorizon.com for pre-arrival assistance.
+            Thank you for choosing bookme.com. Please contact concierge@bookme.com for pre-arrival assistance.
           </p>
         </div>
       `;
@@ -203,7 +203,7 @@ export async function POST(req: Request) {
       console.log('Sending receipt email to guest:', reservation.guest.email);
       await sendMail({
         to: reservation.guest.email,
-        subject: 'Reservation Confirmed - Luxury Horizon Resort',
+        subject: 'Reservation Confirmed - bookme.com',
         html: htmlBody,
       });
 
@@ -251,7 +251,7 @@ export async function POST(req: Request) {
 
         const htmlBody = `
           <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #f87171; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #f87171; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+            <h2 style="color: #f87171; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">BOOKME.COM</h2>
             <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Refund Confirmation</p>
             <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
             
@@ -272,14 +272,14 @@ export async function POST(req: Request) {
 
             <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
             <p style="font-size: 12px; color: #78716c; text-align: center;">
-              If you have any questions, please contact concierge@luxuryhorizon.com.
+              If you have any questions, please contact concierge@bookme.com.
             </p>
           </div>
         `;
 
         await sendMail({
           to: updatedRes.guest.email,
-          subject: 'Refund Processed successfully - Luxury Horizon Resort',
+          subject: 'Refund Processed successfully - bookme.com',
           html: htmlBody,
         });
 

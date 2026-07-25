@@ -993,7 +993,7 @@ export default function DashboardPage() {
           <aside className="w-72 bg-[#141414] border-r border-white/10 p-6 flex flex-col justify-between" onClick={(e) => e.stopPropagation()}>
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <span className="font-heading text-lg font-bold text-white">LUXURY<span className="text-brand-accent">HORIZON</span></span>
+                <span className="font-heading text-lg font-bold text-white">BOOKME<span className="text-brand-accent">.COM</span></span>
                 <button onClick={() => setIsMobileOpen(false)} className="p-1 rounded-lg text-[#8a8a8a] hover:text-white"><X className="h-5 w-5" /></button>
               </div>
               <SidebarNav activeTab={activeTab} setActiveTab={(t) => { handleTabChange(t); setIsMobileOpen(false); }} userRole={userRole} collapsed={false} />
@@ -1024,7 +1024,7 @@ export default function DashboardPage() {
             </div>
             {!isSidebarCollapsed && (
               <span className="font-heading text-base font-bold tracking-wider text-white truncate">
-                LUXURY<span className="text-brand-accent">HORIZON</span>
+                BOOKME<span className="text-brand-accent">.COM</span>
               </span>
             )}
           </div>

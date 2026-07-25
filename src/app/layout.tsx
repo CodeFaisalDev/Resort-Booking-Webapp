@@ -27,11 +27,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Luxury Horizon — Premium Resort Booking",
-    template: "%s | Luxury Horizon",
+    default: "bookme.com — Premium Resort Booking",
+    template: "%s | bookme.com",
   },
   description:
-    "Discover and book world-class luxury resorts. From tropical overwater villas to alpine retreats, experience the finest hospitality at Luxury Horizon.",
+    "Discover and book world-class luxury resorts. From tropical overwater villas to alpine retreats, experience the finest hospitality at bookme.com.",
   keywords: [
     "luxury resort",
     "resort booking",
@@ -40,20 +40,20 @@ export const metadata: Metadata = {
     "tropical getaway",
     "premium hospitality",
   ],
-  authors: [{ name: "Luxury Horizon" }],
+  authors: [{ name: "bookme.com" }],
   openGraph: {
-    title: "Luxury Horizon — Premium Resort Booking",
+    title: "bookme.com — Premium Resort Booking",
     description:
-      "Discover and book world-class luxury resorts with Luxury Horizon.",
+      "Discover and book world-class luxury resorts with bookme.com.",
     type: "website",
     locale: "en_US",
-    siteName: "Luxury Horizon",
+    siteName: "bookme.com",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Luxury Horizon — Premium Resort Booking",
+    title: "bookme.com — Premium Resort Booking",
     description:
-      "Discover and book world-class luxury resorts with Luxury Horizon.",
+      "Discover and book world-class luxury resorts with bookme.com.",
   },
   robots: {
     index: true,

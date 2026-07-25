@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     // Send email with new code
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #78350f; max-width: 500px; margin: 0 auto;">
-        <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 24px; letter-spacing: 2px;">LUXURY HORIZON RESORT</h2>
+        <h2 style="color: #fbbf24; font-family: serif; text-align: center; font-size: 24px; letter-spacing: 2px;">BOOKME.COM</h2>
         <p style="text-align: center; color: #a8a29e; font-size: 12px; text-transform: uppercase;">Email Verification Portal</p>
         <hr style="border: 0; border-top: 1px solid #292524; margin: 25px 0;" />
         
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     console.log(`Resending verification email to: ${email}`);
     await sendMail({
       to: email,
-      subject: "New Verification Code - Luxury Horizon Resort",
+      subject: "New Verification Code - bookme.com",
       html: htmlBody
     });
 

@@ -229,10 +229,10 @@ async function main() {
   // ── Staff ──
   console.log('👤 Creating staff...');
   const adminUser = await prisma.staff.create({
-    data: { fullName: 'Sarah Jenkins', email: 'admin@luxuryhorizon.com', password: adminPassword, role: 'ADMIN', shift: 'Day', departmentId: adminDept.id },
+    data: { fullName: 'Sarah Jenkins', email: 'admin@bookme.com', password: adminPassword, role: 'ADMIN', shift: 'Day', departmentId: adminDept.id },
   });
   const staffUser = await prisma.staff.create({
-    data: { fullName: 'John Cleaner', email: 'staff@luxuryhorizon.com', password: staffPassword, role: 'STAFF', shift: 'Day', departmentId: hkDept.id },
+    data: { fullName: 'John Cleaner', email: 'staff@bookme.com', password: staffPassword, role: 'STAFF', shift: 'Day', departmentId: hkDept.id },
   });
 
   // ── Guest ──

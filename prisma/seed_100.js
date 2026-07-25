@@ -79,7 +79,7 @@ async function main() {
   const adminUser = await prisma.staff.create({
     data: {
       fullName: 'Sarah Jenkins',
-      email: 'admin@luxuryhorizon.com',
+      email: 'admin@bookme.com',
       password: adminPassword,
       role: 'ADMIN',
       shift: 'Day',
@@ -89,7 +89,7 @@ async function main() {
   const staffUser = await prisma.staff.create({
     data: {
       fullName: 'John Cleaner',
-      email: 'staff@luxuryhorizon.com',
+      email: 'staff@bookme.com',
       password: staffPassword,
       role: 'STAFF',
       shift: 'Day',

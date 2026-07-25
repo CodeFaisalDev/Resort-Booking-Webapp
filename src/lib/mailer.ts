@@ -12,7 +12,7 @@ export const transporter = nodemailer.createTransport({
 
 export const sendMail = async ({ to, subject, html }: { to: string; subject: string; html: string }) => {
   const mailOptions = {
-    from: `"Luxury Horizon Resort" <${process.env.SMTP_USER}>`,
+    from: `"bookme.com" <${process.env.SMTP_USER}>`,
     to,
     subject,
     html,
