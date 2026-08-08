@@ -59,12 +59,14 @@ export default function DashboardPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Active sub-tab for Admin (read from URL query param ?tab=...)
-  const initialTab = (searchParams?.get('tab') as any) || 'overview';
-  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'rooms' | 'depts' | 'staff' | 'roles' | 'services' | 'finance' | 'audits' | 'resorts'>(initialTab);
+  // Active sub-tabs
+  const urlTab = searchParams?.get('tab');
+  const adminTabs = ['overview', 'bookings', 'rooms', 'depts', 'staff', 'roles', 'services', 'finance', 'audits', 'resorts'];
+  const initialAdminTab = (urlTab && adminTabs.includes(urlTab)) ? (urlTab as any) : 'overview';
+  const initialGuestTab = (urlTab && ['reservations', 'favorites', 'profile'].includes(urlTab)) ? (urlTab as any) : 'reservations';
 
-  // Active sub-tab for Guest ('reservations' | 'favorites' | 'profile')
-  const [guestTab, setGuestTab] = useState<'reservations' | 'favorites' | 'profile'>('reservations');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'rooms' | 'depts' | 'staff' | 'roles' | 'services' | 'finance' | 'audits' | 'resorts'>(initialAdminTab);
+  const [guestTab, setGuestTab] = useState<'reservations' | 'favorites' | 'profile'>(initialGuestTab);
 
   // Synchronize activeTab with URL
   const handleTabChange = (tab: any) => {
@@ -989,8 +991,12 @@ export default function DashboardPage() {
     );
   }
 
-  const userType = (session?.user as any)?.type;
-  const userRole = (session?.user as any)?.role;
+  const rawRole = (session?.user as any)?.role;
+  const rawType = (session?.user as any)?.type;
+  const userRole = rawRole ? String(rawRole).toUpperCase() : (rawType === 'staff' ? 'STAFF' : 'GUEST');
+  const isAdmin = userRole === 'ADMIN';
+  const isStaff = userRole === 'STAFF';
+  const isGuest = !isAdmin && !isStaff;
 
   return (
     <div className="w-full h-screen bg-[#0C0A09] text-[#E5E5E5] flex overflow-hidden select-none">
@@ -1093,7 +1099,7 @@ export default function DashboardPage() {
             </button>
             <h2 className="text-xs font-bold uppercase tracking-wider text-brand-accent flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-brand-accent" />
-              {userRole === 'ADMIN' ? `${activeTab.toUpperCase()} CONTROLS` : userRole === 'STAFF' ? 'STAFF TASK QUEUE' : `${guestTab.toUpperCase()} PORTAL`}
+              {isAdmin ? `${activeTab.toUpperCase()} CONTROLS` : isStaff ? 'STAFF TASK QUEUE' : `${guestTab.toUpperCase()} PORTAL`}
             </h2>
           </div>
           <div className="text-[10px] text-[#A0A0A0] font-semibold flex items-center gap-3">
@@ -1114,8 +1120,8 @@ export default function DashboardPage() {
         {/* INNER SCROLL CONTENT CONTAINER */}
         <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 max-w-7xl w-full mx-auto space-y-6 overflow-hidden">
           
-          {/* GUEST PORTAL VIEW */}
-          {userRole === 'GUEST' && (
+          {/* GUEST PORTAL VIEW (For ALL non-admin, non-staff users) */}
+          {isGuest && (
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden space-y-6">
               {/* Guest Tab 1: Reservations */}
               {guestTab === 'reservations' && (
@@ -1265,7 +1271,7 @@ export default function DashboardPage() {
           )}
 
           {/* STAFF OPERATOR VIEW */}
-          {userRole === 'STAFF' && (
+          {isStaff && (
             <div className="bg-[#1A1A1A]/90 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/5 shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
               <div className="shrink-0 pb-4 border-b border-white/5">
                 <h2 className="font-heading text-xl font-semibold text-white">Assigned Tasks Queue</h2>
@@ -1310,8 +1316,8 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* ADMIN OPERATOR TAB VIEWS */}
-          {userRole === 'ADMIN' && (
+          {/* ADMIN OPERATOR TAB VIEWS (STRICTLY FOR ADMIN ROLE) */}
+          {isAdmin && (
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden space-y-6">
               
               {/* TAB 1: OVERVIEW */}
@@ -2419,22 +2425,29 @@ function SidebarNav({
   userRole: string;
   collapsed: boolean;
 }) {
-  if (userRole === 'GUEST') {
-    const guestTabs = [
-      { id: 'reservations', label: 'My Bookings', icon: Calendar },
-      { id: 'favorites', label: 'Saved Favorites', icon: Sparkles },
-      { id: 'profile', label: 'My Profile', icon: User },
+  if (userRole === 'ADMIN') {
+    const tabs = [
+      { id: 'overview', label: 'Overview', icon: Activity },
+      { id: 'bookings', label: 'Bookings Desk', icon: Calendar },
+      { id: 'rooms', label: 'Housekeeping', icon: Building },
+      { id: 'staff', label: 'Staffing', icon: Users },
+      { id: 'roles', label: 'Roles & Access', icon: ShieldCheck },
+      { id: 'depts', label: 'Departments', icon: Layers },
+      { id: 'services', label: 'Services Catalog', icon: Sparkles },
+      { id: 'finance', label: 'Ledgers', icon: DollarSign },
+      { id: 'audits', label: 'Audits', icon: FileSpreadsheet },
+      { id: 'resorts', label: 'Properties', icon: Compass },
     ];
 
     return (
       <nav className="space-y-1 select-none">
-        {guestTabs.map((t) => {
+        {tabs.map((t) => {
           const Icon = t.icon;
-          const isActive = guestTab === t.id;
+          const isActive = activeTab === t.id;
           return (
             <button
               key={t.id}
-              onClick={() => setGuestTab(t.id)}
+              onClick={() => setActiveTab(t.id)}
               className={`flex items-center gap-3 w-full px-3.5 py-3 rounded-xl text-xs uppercase font-bold transition-all text-left cursor-pointer ${
                 isActive
                   ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
@@ -2482,28 +2495,22 @@ function SidebarNav({
     );
   }
 
-  const tabs = [
-    { id: 'overview', label: 'Overview', icon: Activity },
-    { id: 'bookings', label: 'Bookings Desk', icon: Calendar },
-    { id: 'rooms', label: 'Housekeeping', icon: Building },
-    { id: 'staff', label: 'Staffing', icon: Users },
-    { id: 'roles', label: 'Roles & Access', icon: ShieldCheck },
-    { id: 'depts', label: 'Departments', icon: Layers },
-    { id: 'services', label: 'Services Catalog', icon: Sparkles },
-    { id: 'finance', label: 'Ledgers', icon: DollarSign },
-    { id: 'audits', label: 'Audits', icon: FileSpreadsheet },
-    { id: 'resorts', label: 'Properties', icon: Compass },
+  // DEFAULT FALLBACK FOR ALL GUEST USERS (MY BOOKINGS, SAVED FAVORITES, MY PROFILE)
+  const guestTabs = [
+    { id: 'reservations', label: 'My Bookings', icon: Calendar },
+    { id: 'favorites', label: 'Saved Favorites', icon: Sparkles },
+    { id: 'profile', label: 'My Profile', icon: User },
   ];
 
   return (
     <nav className="space-y-1 select-none">
-      {tabs.map((t) => {
+      {guestTabs.map((t) => {
         const Icon = t.icon;
-        const isActive = activeTab === t.id;
+        const isActive = guestTab === t.id;
         return (
           <button
             key={t.id}
-            onClick={() => setActiveTab(t.id)}
+            onClick={() => setGuestTab(t.id)}
             className={`flex items-center gap-3 w-full px-3.5 py-3 rounded-xl text-xs uppercase font-bold transition-all text-left cursor-pointer ${
               isActive
                 ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
