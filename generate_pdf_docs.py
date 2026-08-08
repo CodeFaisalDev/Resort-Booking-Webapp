@@ -32,18 +32,18 @@ class NumberedCanvas(canvas.Canvas):
 
         self.saveState()
         self.setFont("Helvetica-Bold", 8)
-        self.setFillColor(colors.HexColor("#A8A29E"))
+        self.setFillColor(colors.HexColor("#78716C"))
         
-        # Header
-        self.drawString(54, 11 * inch - 36, "BOOKME.COM — COMPLETE TECHNICAL DOCUMENTATION & SYSTEM BLUEPRINT")
-        self.setStrokeColor(colors.HexColor("#292524"))
+        # Top Header
+        self.drawString(54, 11 * inch - 36, "BOOKME.COM — EXHAUSTIVE SYSTEM TECHNICAL MANUAL & ARCHITECTURE SPECIFICATION")
+        self.setStrokeColor(colors.HexColor("#D6D3D1"))
         self.setLineWidth(0.5)
         self.line(54, 11 * inch - 42, 8.5 * inch - 54, 11 * inch - 42)
 
-        # Footer
+        # Bottom Footer
         self.line(54, 48, 8.5 * inch - 54, 48)
         self.setFont("Helvetica", 8)
-        self.drawString(54, 34, "Confidential — Online Resort Management & Booking System")
+        self.drawString(54, 34, "Official Production Specification & Source Code Blueprint")
         page_text = f"Page {self._pageNumber} of {page_count}"
         self.drawRightString(8.5 * inch - 54, 34, page_text)
         self.restoreState()
@@ -61,47 +61,45 @@ def build_pdf():
 
     styles = getSampleStyleSheet()
 
-    # Custom Color Palette
-    PRIMARY = colors.HexColor("#0C0A09")       # Dark Charcoal / Obsidian
-    ACCENT = colors.HexColor("#D97706")        # Luxury Amber / Gold
-    ACCENT_LIGHT = colors.HexColor("#FEF3C7")  # Amber Tint
-    TEXT_DARK = colors.HexColor("#1C1917")     # Near Black
-    TEXT_MUTED = colors.HexColor("#78716C")    # Muted Grey
-    BG_CARD = colors.HexColor("#F5F5F4")       # Light Off-white background
-    BORDER_COLOR = colors.HexColor("#E7E5E4")  # Subtle border
+    # Color Palette
+    PRIMARY = colors.HexColor("#0C0A09")       # Obsidian Dark
+    ACCENT = colors.HexColor("#D97706")        # Amber Accent
+    ACCENT_DARK = colors.HexColor("#B45309")   # Dark Gold
+    TEXT_DARK = colors.HexColor("#1C1917")     # Charcoal Body Text
+    TEXT_MUTED = colors.HexColor("#78716C")    # Secondary Muted Text
+    BG_LIGHT = colors.HexColor("#F5F5F4")      # Warm Off-white
+    BORDER_COLOR = colors.HexColor("#E7E5E4")  # Border Line
 
-    # Styles
+    # Paragraph Styles
     title_style = ParagraphStyle(
         'CoverTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=28,
-        leading=34,
+        fontSize=26,
+        leading=32,
         textColor=PRIMARY,
-        alignment=0,
-        spaceAfter=12
+        spaceAfter=10
     )
 
     subtitle_style = ParagraphStyle(
         'CoverSubtitle',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=13,
-        leading=18,
-        textColor=ACCENT,
-        alignment=0,
-        spaceAfter=24
+        fontSize=12,
+        leading=16,
+        textColor=ACCENT_DARK,
+        spaceAfter=20
     )
 
     h1_style = ParagraphStyle(
         'Heading1_Custom',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=18,
-        leading=22,
+        fontSize=15,
+        leading=19,
         textColor=PRIMARY,
-        spaceBefore=18,
-        spaceAfter=10,
+        spaceBefore=16,
+        spaceAfter=8,
         keepWithNext=True
     )
 
@@ -109,11 +107,11 @@ def build_pdf():
         'Heading2_Custom',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=13,
-        leading=16,
-        textColor=ACCENT,
-        spaceBefore=14,
-        spaceAfter=6,
+        fontSize=11.5,
+        leading=15,
+        textColor=ACCENT_DARK,
+        spaceBefore=12,
+        spaceAfter=5,
         keepWithNext=True
     )
 
@@ -121,17 +119,17 @@ def build_pdf():
         'Body_Custom',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=9.5,
-        leading=14,
+        fontSize=9,
+        leading=13.5,
         textColor=TEXT_DARK,
-        spaceAfter=8
+        spaceAfter=7
     )
 
     bullet_style = ParagraphStyle(
         'Bullet_Custom',
         parent=body_style,
-        leftIndent=15,
-        firstLineIndent=-10,
+        leftIndent=14,
+        firstLineIndent=-9,
         spaceAfter=4
     )
 
@@ -139,332 +137,481 @@ def build_pdf():
         'Code_Custom',
         parent=styles['Normal'],
         fontName='Courier',
-        fontSize=8,
-        leading=10,
-        textColor=colors.HexColor("#1E293B"),
-        backColor=colors.HexColor("#F1F5F9"),
-        borderColor=colors.HexColor("#CBD5E1"),
+        fontSize=7.5,
+        leading=9.5,
+        textColor=colors.HexColor("#0F172A"),
+        backColor=colors.HexColor("#F8FAFC"),
+        borderColor=colors.HexColor("#E2E8F0"),
         borderWidth=0.5,
         borderPadding=6,
-        spaceBefore=6,
-        spaceAfter=8,
-        borderRadius=4
-    )
-
-    callout_style = ParagraphStyle(
-        'Callout_Custom',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=9,
-        leading=13,
-        textColor=colors.HexColor("#92400E"),
-        backColor=colors.HexColor("#FEF3C7"),
-        borderColor=colors.HexColor("#F59E0B"),
-        borderWidth=0.5,
-        borderPadding=8,
-        spaceBefore=8,
-        spaceAfter=10
+        spaceBefore=5,
+        spaceAfter=7
     )
 
     story = []
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # COVER PAGE
-    # -------------------------------------------------------------------------
-    story.append(Spacer(1, 40))
-    story.append(Paragraph("BOOKME.COM", ParagraphStyle('CoverBadge', fontName='Helvetica-Bold', fontSize=12, textColor=ACCENT, spaceAfter=8)))
-    story.append(Paragraph("LUXURY RESORT MANAGEMENT & BOOKING PLATFORM", title_style))
-    story.append(Paragraph("Comprehensive Technical Documentation, System Architecture, Workflow Blueprint & Source Code Guide", subtitle_style))
-    story.append(HRFlowable(width="100%", thickness=3, color=ACCENT, spaceBefore=10, spaceAfter=25))
+    # =========================================================================
+    story.append(Spacer(1, 20))
+    story.append(Paragraph("BOOKME.COM", ParagraphStyle('CoverBadge', fontName='Helvetica-Bold', fontSize=11, textColor=ACCENT, spaceAfter=6)))
+    story.append(Paragraph("ONLINE RESORT MANAGEMENT & BOOKING SYSTEM", title_style))
+    story.append(Paragraph("Exhaustive Technical Specification, End-to-End System Workflows, Database Architecture & API Reference", subtitle_style))
+    story.append(HRFlowable(width="100%", thickness=2.5, color=ACCENT, spaceBefore=5, spaceAfter=20))
 
-    meta_data = [
-        [Paragraph("<b>Document Version:</b>", body_style), Paragraph("1.0.0 (Production Release)", body_style)],
-        [Paragraph("<b>Core Framework:</b>", body_style), Paragraph("Next.js 16 (App Router + Turbopack)", body_style)],
-        [Paragraph("<b>UI & Styling:</b>", body_style), Paragraph("React 19, Tailwind CSS, GSAP 3, Lucide Icons", body_style)],
-        [Paragraph("<b>Backend & ORM:</b>", body_style), Paragraph("Prisma ORM with PostgreSQL Infrastructure", body_style)],
-        [Paragraph("<b>Payment Gateway:</b>", body_style), Paragraph("Dodo Payments API (Checkout & Automated Refunds)", body_style)],
-        [Paragraph("<b>Authentication:</b>", body_style), Paragraph("NextAuth.js (JWT + Credentials + Nodemailer Verification)", body_style)],
-        [Paragraph("<b>Author / System Architect:</b>", body_style), Paragraph("Senior Full-Stack Engineering Team", body_style)],
-        [Paragraph("<b>Date Generated:</b>", body_style), Paragraph("August 8, 2026", body_style)],
+    meta_table_data = [
+        [Paragraph("<b>Document Title:</b>", body_style), Paragraph("Bookme.com Comprehensive Technical System Manual", body_style)],
+        [Paragraph("<b>Version / Build:</b>", body_style), Paragraph("v1.0.0 (Production Release — Turbopack Enabled)", body_style)],
+        [Paragraph("<b>Target Audience:</b>", body_style), Paragraph("Software Engineers, System Architects, QA Engineers & DevOps", body_style)],
+        [Paragraph("<b>Core Web Framework:</b>", body_style), Paragraph("Next.js 16 (App Router) + React 19 + TypeScript 5", body_style)],
+        [Paragraph("<b>Database & Persistence:</b>", body_style), Paragraph("PostgreSQL via Prisma ORM v6 with Dynamic Transaction Support", body_style)],
+        [Paragraph("<b>Security & Auth:</b>", body_style), Paragraph("NextAuth.js (JWT Provider) + Bcryptjs + Nodemailer Verification", body_style)],
+        [Paragraph("<b>Payments & Gateway:</b>", body_style), Paragraph("Dodo Payments Hosted Checkout & Automated REST Refunds", body_style)],
+        [Paragraph("<b>Interactive Animations:</b>", body_style), Paragraph("GSAP 3 (ScrollTrigger & ScrollTo) + Leaflet GIS Maps", body_style)],
     ]
-    t_meta = Table(meta_data, colWidths=[160, 340])
+    t_meta = Table(meta_table_data, colWidths=[150, 350])
     t_meta.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), BG_CARD),
+        ('BACKGROUND', (0,0), (-1,-1), BG_LIGHT),
         ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
-        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor("#E7E5E4")),
-        ('TOPPADDING', (0,0), (-1,-1), 6),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-        ('LEFTPADDING', (0,0), (-1,-1), 10),
-        ('RIGHTPADDING', (0,0), (-1,-1), 10),
+        ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+        ('LEFTPADDING', (0,0), (-1,-1), 8),
+        ('RIGHTPADDING', (0,0), (-1,-1), 8),
     ]))
     story.append(t_meta)
 
-    story.append(Spacer(1, 40))
-    story.append(Paragraph("<b>Executive Summary:</b>", h2_style))
-    story.append(Paragraph(
-        "This document contains the complete end-to-end technical documentation for the <b>Bookme.com Online Resort Management System</b>. "
-        "It provides full architectural blueprints, data models, user flows, API specs, role permission matrices, and source code reference "
-        "covering Guest Booking, Staff Operations, Admin Controls, and the Dynamic Tiered Cancellation Refund Engine.",
-        body_style
-    ))
+    story.append(Spacer(1, 20))
+    story.append(Paragraph("<b>Table of Document Contents:</b>", h2_style))
+    toc_data = [
+        [Paragraph("1. Executive Summary & Vision", body_style), Paragraph("Section 6. Payment Gateway Integration", body_style)],
+        [Paragraph("2. Full Technology Stack Deep-Dive", body_style), Paragraph("7. Role-Based Dashboard Desks", body_style)],
+        [Paragraph("3. Database Schema & Data Models", body_style), Paragraph("8. Admin Console & RBAC Governance", body_style)],
+        [Paragraph("4. Auth Subsystem & Registration", body_style), Paragraph("9. Complete API Endpoint Specification", body_style)],
+        [Paragraph("5. Dynamic Tiered Cancellation Engine", body_style), Paragraph("10. Deployment & Environment Setup", body_style)],
+    ]
+    t_toc = Table(toc_data, colWidths=[250, 250])
+    t_toc.setStyle(TableStyle([
+        ('BOX', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('LEFTPADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(t_toc)
     story.append(PageBreak())
 
-    # -------------------------------------------------------------------------
-    # SECTION 1: ARCHITECTURE OVERVIEW & TECH STACK
-    # -------------------------------------------------------------------------
-    story.append(Paragraph("1. System Architecture & Tech Stack", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=12))
+    # =========================================================================
+    # SECTION 1: EXECUTIVE SUMMARY & VISION
+    # =========================================================================
+    story.append(Paragraph("1. Executive Summary & System Vision", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
 
     story.append(Paragraph(
-        "Bookme.com is engineered as a high-performance, responsive web application using <b>Next.js 16</b> with the App Router paradigm. "
-        "The system utilizes client-side rendering with GSAP parallax animation for rich visual experiences alongside robust server-side API routes for data integrity.",
+        "<b>Bookme.com</b> is an enterprise-grade luxury resort management and guest booking web platform designed to streamline resort operations, "
+        "deliver a high-end luxury guest experience, and manage multi-property inventory seamlessly. The application replaces fragmented legacy booking tools "
+        "with an integrated Next.js 16 full-stack architecture featuring real-time invoice generation, automated payment processing, role-based staff operations, "
+        "and a customer-centric dynamic cancellation policy engine.",
         body_style
     ))
 
-    tech_table_data = [
-        [Paragraph("<b>Layer</b>", body_style), Paragraph("<b>Technology Selection</b>", body_style), Paragraph("<b>Key Responsibilities</b>", body_style)],
-        [Paragraph("<b>Frontend Framework</b>", body_style), Paragraph("Next.js 16 + React 19", body_style), Paragraph("App Router, Server Components, Dynamic Routing", body_style)],
-        [Paragraph("<b>UI & Styling</b>", body_style), Paragraph("Tailwind CSS + GSAP 3", body_style), Paragraph("Luxury Dark Aesthetics, Micro-animations, Mouse Tilt", body_style)],
-        [Paragraph("<b>Maps & GIS</b>", body_style), Paragraph("Leaflet.js + OpenStreetMap", body_style), Paragraph("Interactive resort map with flyTo destination zoom", body_style)],
-        [Paragraph("<b>Database & ORM</b>", body_style), Paragraph("PostgreSQL + Prisma ORM", body_style), Paragraph("Relational schema, transaction management, seeds", body_style)],
-        [Paragraph("<b>Authentication</b>", body_style), Paragraph("NextAuth.js + bcryptjs", body_style), Paragraph("JWT sessions, password hashing, role protection", body_style)],
-        [Paragraph("<b>Email Dispatch</b>", body_style), Paragraph("Nodemailer SMTP", body_style), Paragraph("Verification codes, booking receipts, cancellation emails", body_style)],
-        [Paragraph("<b>Payments & Refunds</b>", body_style), Paragraph("Dodo Payments REST API", body_style), Paragraph("Hosted checkout sessions, automated refund processing", body_style)],
-    ]
-    t_tech = Table(tech_table_data, colWidths=[110, 160, 230])
-    t_tech.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), PRIMARY),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-        ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
-        ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
-        ('TOPPADDING', (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-    ]))
-    story.append(t_tech)
-    story.append(Spacer(1, 14))
+    story.append(Paragraph("<b>Core Platform Objectives:</b>", h2_style))
+    story.append(Paragraph("• <b>High-End Visual Aesthetics:</b> Deliver a luxury dark-mode visual experience (`bg-[#0C0A09]`) with GSAP scroll parallax, 3D mouse tilt cards, and interactive Leaflet map controls.", bullet_style))
+    story.append(Paragraph("• <b>Resilient Guest Onboarding:</b> Provide friction-free registration with email verification codes, Nodemailer dev fallbacks, and account re-verification recovery.", bullet_style))
+    story.append(Paragraph("• <b>Fair Cancellation Policy:</b> Guarantee a maximum fee cap of <b>10%</b> for late cancellations, providing guests with at least 90% refund security at all times.", bullet_style))
+    story.append(Paragraph("• <b>Comprehensive Operations:</b> Support multi-role desks (Guest Portal, Staff Housekeeping Queue, Admin Governance) with granular RBAC permissions and audit CSV exports.", bullet_style))
 
-    # -------------------------------------------------------------------------
-    # SECTION 2: DATABASE SCHEMA & ENTITY RELATIONS
-    # -------------------------------------------------------------------------
-    story.append(Paragraph("2. Database Schema & Data Models", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=12))
-
-    story.append(Paragraph(
-        "The database layer is managed via <b>Prisma ORM</b> connected to PostgreSQL. Below is the entity specification:",
-        body_style
-    ))
-
-    db_models = [
-        [Paragraph("<b>Model</b>", body_style), Paragraph("<b>Key Fields & Types</b>", body_style), Paragraph("<b>Relations & Role</b>", body_style)],
-        [Paragraph("<b>User</b>", body_style), Paragraph("id (UUID), email, password, fullName, role, isVerified", body_style), Paragraph("Root account entity. Supports GUEST, STAFF, ADMIN", body_style)],
-        [Paragraph("<b>Guest</b>", body_style), Paragraph("id, phone, passportNum, userId (FK User)", body_style), Paragraph("Stores guest profile details & reservation history", body_style)],
-        [Paragraph("<b>Staff</b>", body_style), Paragraph("id, employeeId, position, deptId, roleId", body_style), Paragraph("Linked to Department and operational Role (RBAC)", body_style)],
-        [Paragraph("<b>Resort</b>", body_style), Paragraph("id, name, location, latitude, longitude, rating", body_style), Paragraph("Contains Rooms, Reviews, and Add-on Services", body_style)],
-        [Paragraph("<b>Room</b>", body_style), Paragraph("id, roomNum, status, resortId, roomTypeId", body_style), Paragraph("Status: AVAILABLE, OCCUPIED, MAINTENANCE, CLEANING", body_style)],
-        [Paragraph("<b>Reservation</b>", body_style), Paragraph("id, checkIn, checkOut, status, totalAmount", body_style), Paragraph("Status: PENDING, CONFIRMED, CANCELED, CHECKED_IN", body_style)],
-        [Paragraph("<b>Payment</b>", body_style), Paragraph("id, amount, method, status, reservationId", body_style), Paragraph("Status: PENDING, COMPLETED, FAILED, REFUNDED", body_style)],
-        [Paragraph("<b>Role</b>", body_style), Paragraph("id, name, permissions (String[])", body_style), Paragraph("Stores RBAC permission keys for staff operators", body_style)],
-    ]
-    t_db = Table(db_models, colWidths=[90, 210, 200])
-    t_db.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#292524")),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-        ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
-        ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
-        ('TOPPADDING', (0,0), (-1,-1), 5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
-    ]))
-    story.append(t_db)
-    story.append(Spacer(1, 14))
-
-    # -------------------------------------------------------------------------
-    # SECTION 3: AUTHENTICATION & USER MANAGEMENT
-    # -------------------------------------------------------------------------
-    story.append(Paragraph("3. Authentication & Security Subsystem", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=12))
-
-    story.append(Paragraph("<b>Registration & 6-Digit Email Code Verification:</b>", h2_style))
-    story.append(Paragraph(
-        "Guest registration is handled via <code>src/app/api/signup/route.ts</code>. When a user registers:",
-        body_style
-    ))
-    story.append(Paragraph("1. Password is hashed using <code>bcryptjs</code> (salt rounds = 10).", bullet_style))
-    story.append(Paragraph("2. A random 6-digit numeric verification code is generated.", bullet_style))
-    story.append(Paragraph("3. <b>Unverified Account Re-Registration Support:</b> If an unverified user submits signup again, their password and verification code are updated seamlessly instead of failing.", bullet_style))
-    story.append(Paragraph("4. Verification emails are dispatched via <code>src/lib/mailer.ts</code>. In development environments without valid SMTP credentials, codes fall back to console logging so registration completes smoothly.", bullet_style))
-
-    story.append(Paragraph("<b>NextAuth Credentials Provider & JWT Session:</b>", h2_style))
-    story.append(Paragraph(
-        "Authentication sessions are signed into secure HTTP-only cookies via NextAuth JWT provider (<code>src/lib/auth.ts</code>). "
-        "Token callbacks attach the user's role (<code>GUEST</code>, <code>STAFF</code>, <code>ADMIN</code>) and user type so API routes enforce strict authorization checks.",
-        body_style
-    ))
-
-    story.append(PageBreak())
-
-    # -------------------------------------------------------------------------
-    # SECTION 4: DYNAMIC TIERED CANCELLATION & REFUND ENGINE
-    # -------------------------------------------------------------------------
-    story.append(Paragraph("4. Dynamic Tiered Cancellation & Refund Engine", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=12))
-
-    story.append(Paragraph(
-        "The booking engine features a fair, transparent <b>Dynamic Tiered Cancellation Policy</b> with a maximum fee cap of <b>10%</b>. "
-        "Guests are guaranteed to receive at least 90% of their money back upon cancellation prior to or on check-in date.",
-        body_style
-    ))
-
-    cancellation_tiers = [
-        [Paragraph("<b>Notice Window</b>", body_style), Paragraph("<b>Refund %</b>", body_style), Paragraph("<b>Retention Fee %</b>", body_style), Paragraph("<b>Policy Description</b>", body_style)],
-        [Paragraph("<b>≥ 7 Days Notice</b>", body_style), Paragraph("<b>100% Full Refund</b>", body_style), Paragraph("0% Fee", body_style), Paragraph("Full refund guarantee. Zero retention penalty.", body_style)],
-        [Paragraph("<b>3 to 7 Days Notice</b>", body_style), Paragraph("<b>95% Refund</b>", body_style), Paragraph("5% Processing Fee", body_style), Paragraph("Minor processing fee retained.", body_style)],
-        [Paragraph("<b>< 3 Days / Same Day / Past</b>", body_style), Paragraph("<b>90% Refund</b>", body_style), Paragraph("<b>10% Max Fee Cap</b>", body_style), Paragraph("Capped at 10% maximum fee retention.", body_style)],
-    ]
-    t_tier = Table(cancellation_tiers, colWidths=[120, 100, 110, 170])
-    t_tier.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#B45309")),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-        ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
-        ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
-        ('TOPPADDING', (0,0), (-1,-1), 6),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-    ]))
-    story.append(t_tier)
     story.append(Spacer(1, 10))
 
-    story.append(Paragraph("<b>Cancellation Preview Modal & Execution Workflow:</b>", h2_style))
+    # =========================================================================
+    # SECTION 2: FULL TECH STACK DEEP DIVE
+    # =========================================================================
+    story.append(Paragraph("2. Technology Stack Deep-Dive", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
+
     story.append(Paragraph(
-        "1. <b>Dashboard Modal (`src/app/dashboard/page.tsx`)</b>: Clicking 'Cancel Booking' opens a modal showing check-in countdown, policy tier badge, total paid amount, retention fee, and net refund amount.<br/>"
-        "2. <b>Agreement Disclaimer</b>: The user must explicitly check <i>'I have read and accept the cancellation fee policy terms'</i> to unlock the confirmation button.<br/>"
-        "3. <b>Backend Execution (`DELETE /api/book`)</b>: Computes the exact net refund, triggers automated Dodo Payments API refund, updates DB reservation to <code>CANCELED</code>, and sends a breakdown email receipt.",
+        "The application architecture leverages a modern, full-stack JavaScript/TypeScript toolchain built around Next.js 16 App Router. "
+        "Below is an in-depth breakdown of each architectural layer:",
         body_style
     ))
 
-    story.append(Paragraph(
-        "<b>Code Implementation Snippet (DELETE /api/book):</b>",
-        ParagraphStyle('CodeHeading', parent=body_style, fontName='Helvetica-Bold', spaceBefore=6)
-    ))
-
-    code_snippet = """// Dynamic Tiered Refund Calculation in src/app/api/book/route.ts
-const checkInTime = new Date(reservation.checkIn).getTime();
-const daysUntilCheckIn = (checkInTime - Date.now()) / (1000 * 60 * 60 * 24);
-
-let refundPercent = 100;
-if (reservation.status === 'CONFIRMED') {
-  if (daysUntilCheckIn >= 7) {
-    refundPercent = 100; // 100% Full Refund ($0 fee)
-  } else if (daysUntilCheckIn >= 3) {
-    refundPercent = 95;  // 95% Refund (5% fee)
-  } else {
-    refundPercent = 90;  // 90% Refund (10% max fee cap)
-  }
-}
-const totalPaid = Number(reservation.totalAmount);
-const refundAmount = (totalPaid * refundPercent) / 100;
-const retentionFee = totalPaid - refundAmount;"""
-
-    story.append(Paragraph(code_snippet.replace("\n", "<br/>").replace(" ", "&nbsp;"), code_style))
-
-    story.append(Spacer(1, 14))
-
-    # -------------------------------------------------------------------------
-    # SECTION 5: PAYMENT GATEWAY INTEGRATION
-    # -------------------------------------------------------------------------
-    story.append(Paragraph("5. Payment Gateway Integration (Dodo Payments)", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=12))
-
-    story.append(Paragraph(
-        "Bookme.com integrates with <b>Dodo Payments API</b> for hosted checkout sessions and automated refunds. "
-        "The integration comprises three key components:",
-        body_style
-    ))
-
-    story.append(Paragraph("1. <b>Session Initialization (`/api/checkout/[id]/session`)</b>: Converts total invoice amount into cents and requests a hosted payment checkout URL.", bullet_style))
-    story.append(Paragraph("2. <b>Webhook Listener (`/api/webhooks/dodo`)</b>: Listens for <code>payment.succeeded</code> events to automatically transition draft reservations to <code>CONFIRMED</code> status.", bullet_style))
-    story.append(Paragraph("3. <b>Automated Refunds (`/api/book`)</b>: Dispatches POST requests to <code>https://test.dodopayments.com/refunds</code> with payment ID and net refund amount.", bullet_style))
-
-    story.append(Spacer(1, 14))
-
-    # -------------------------------------------------------------------------
-    # SECTION 6: GUEST, STAFF & ADMIN DASHBOARD DESKS
-    # -------------------------------------------------------------------------
-    story.append(Paragraph("6. Role-Based Dashboards & Operational Desks", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=12))
-
-    dash_roles = [
-        [Paragraph("<b>Role Desk</b>", body_style), Paragraph("<b>Tab Views & Interfaces</b>", body_style), Paragraph("<b>Key Features & Capabilities</b>", body_style)],
-        [Paragraph("<b>Guest Portal</b>", body_style), Paragraph("• My Bookings<br/>• Saved Favorites<br/>• My Profile", body_style), Paragraph("View active/past stays, status badges, dynamic cancellation modal, resort bookmarks, and profile details.", body_style)],
-        [Paragraph("<b>Staff Desk</b>", body_style), Paragraph("• Housekeeping Queue<br/>• Task Directory<br/>• Room Lookup", body_style), Paragraph("Filter room statuses (CLEAN, DIRTY, IN_PROGRESS, INSPECTED), update task assignments, and look up guest stays.", body_style)],
-        [Paragraph("<b>Admin Console</b>", body_style), Paragraph("• Bookings Audit<br/>• Properties<br/>• Roles & Permissions<br/>• Staff Directory<br/>• Finance Ledgers", body_style), Paragraph("Create/edit resort properties, configure granular RBAC permissions (e.g. FINANCE_ACCESS, HOUSEKEEPING), manage staff, and trigger CSV exports.", body_style)],
+    tech_deep_data = [
+        [Paragraph("<b>Layer</b>", body_style), Paragraph("<b>Technology</b>", body_style), Paragraph("<b>Architectural Function & Rationale</b>", body_style)],
+        [
+            Paragraph("<b>Core Framework</b>", body_style),
+            Paragraph("Next.js 16 (Turbopack)", body_style),
+            Paragraph("Utilizes the App Router paradigm with Server Components for fast initial page loads and API routes for backend execution. Turbopack provides sub-second hot module reloads.", body_style)
+        ],
+        [
+            Paragraph("<b>Styling System</b>", body_style),
+            Paragraph("Tailwind CSS + Vanilla CSS", body_style),
+            Paragraph("Tailwind CSS v4 CSS-first design system with dark glassmorphism tokens, backdrop blur filters (`backdrop-blur-xl`), custom scrollbars, and luxury amber accent glows.", body_style)
+        ],
+        [
+            Paragraph("<b>Animation Engine</b>", body_style),
+            Paragraph("GSAP 3 (ScrollTrigger)", body_style),
+            Paragraph("Drives hero mouse tilt physics, split-text letter reveals, directional panel transitions, timeline SVG path animations, and smooth section transitions.", body_style)
+        ],
+        [
+            Paragraph("<b>GIS & Mapping</b>", body_style),
+            Paragraph("Leaflet.js + OpenStreetMap", body_style),
+            Paragraph("Renders client-side interactive global maps with custom animated pulse markers. Automatically triggers smooth `flyTo` coordinate transitions when searching destinations.", body_style)
+        ],
+        [
+            Paragraph("<b>Database Layer</b>", body_style),
+            Paragraph("Prisma ORM + PostgreSQL", body_style),
+            Paragraph("Provides type-safe database queries, atomic database transactions (`prisma.$transaction`), foreign key relationships, auto-generated migration histories, and seed data scripts.", body_style)
+        ],
+        [
+            Paragraph("<b>Authentication</b>", body_style),
+            Paragraph("NextAuth.js + Bcryptjs", body_style),
+            Paragraph("Manages JWT session encryption, password salting/hashing (10 rounds), credential verification, and attaches role & user type claims to session tokens.", body_style)
+        ],
+        [
+            Paragraph("<b>Payment Gateway</b>", body_style),
+            Paragraph("Dodo Payments REST API", body_style),
+            Paragraph("Handles hosted checkout session redirects, webhook security verification (`/api/webhooks/dodo`), and REST-based automated refunds (`POST /refunds`).", body_style)
+        ],
+        [
+            Paragraph("<b>Mailer Dispatch</b>", body_style),
+            Paragraph("Nodemailer SMTP", body_style),
+            Paragraph("Handles 6-digit email verification code dispatch, reservation booking confirmations, and detailed cancellation breakdown receipts. Features dev console fallback.", body_style)
+        ],
     ]
-    t_dash = Table(dash_roles, colWidths=[90, 160, 250])
-    t_dash.setStyle(TableStyle([
+    t_tech_deep = Table(tech_deep_data, colWidths=[90, 120, 290])
+    t_tech_deep.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), PRIMARY),
         ('TEXTCOLOR', (0,0), (-1,0), colors.white),
         ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
         ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
-        ('TOPPADDING', (0,0), (-1,-1), 6),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
     ]))
-    story.append(t_dash)
+    story.append(t_tech_deep)
 
     story.append(PageBreak())
 
-    # -------------------------------------------------------------------------
-    # SECTION 7: API ROUTE REFERENCE MATRIX
-    # -------------------------------------------------------------------------
-    story.append(Paragraph("7. Complete API Route Reference Matrix", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=12))
+    # =========================================================================
+    # SECTION 3: DATABASE SCHEMA & DATA MODELS
+    # =========================================================================
+    story.append(Paragraph("3. Complete Database Data Dictionary", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
 
-    api_routes = [
-        [Paragraph("<b>Method</b>", body_style), Paragraph("<b>Endpoint Path</b>", body_style), Paragraph("<b>Role Protection</b>", body_style), Paragraph("<b>Functionality Description</b>", body_style)],
-        [Paragraph("GET", body_style), Paragraph("<code>/api/resorts</code>", body_style), Paragraph("Public", body_style), Paragraph("Fetch resort listing with pagination & location filters", body_style)],
-        [Paragraph("GET", body_style), Paragraph("<code>/api/resorts/[id]</code>", body_style), Paragraph("Public", body_style), Paragraph("Fetch resort detail, room categories & add-on services", body_style)],
-        [Paragraph("POST", body_style), Paragraph("<code>/api/signup</code>", body_style), Paragraph("Public", body_style), Paragraph("Register new user, hash password & dispatch code", body_style)],
-        [Paragraph("POST", body_style), Paragraph("<code>/api/signup/verify</code>", body_style), Paragraph("Public", body_style), Paragraph("Verify 6-digit email code & activate user account", body_style)],
-        [Paragraph("POST", body_style), Paragraph("<code>/api/book</code>", body_style), Paragraph("Guest", body_style), Paragraph("Create draft stay reservation with selected room/services", body_style)],
-        [Paragraph("DELETE", body_style), Paragraph("<code>/api/book</code>", body_style), Paragraph("Guest / Staff", body_style), Paragraph("Cancel stay, execute tiered refund & send receipt", body_style)],
-        [Paragraph("GET", body_style), Paragraph("<code>/api/checkout/[id]</code>", body_style), Paragraph("Guest", body_style), Paragraph("Fetch checkout summary & invoice breakdown", body_style)],
-        [Paragraph("POST", body_style), Paragraph("<code>/api/checkout/[id]/session</code>", body_style), Paragraph("Guest", body_style), Paragraph("Generate Dodo Payments checkout session URL", body_style)],
-        [Paragraph("POST", body_style), Paragraph("<code>/api/webhooks/dodo</code>", body_style), Paragraph("System", body_style), Paragraph("Webhook listener for payment completion events", body_style)],
-        [Paragraph("GET", body_style), Paragraph("<code>/api/dashboard/guest</code>", body_style), Paragraph("Guest", body_style), Paragraph("Fetch guest reservations, favorites, and profile", body_style)],
-        [Paragraph("GET", body_style), Paragraph("<code>/api/dashboard/staff</code>", body_style), Paragraph("Staff", body_style), Paragraph("Fetch housekeeping queue & operational task list", body_style)],
-        [Paragraph("GET", body_style), Paragraph("<code>/api/dashboard/admin</code>", body_style), Paragraph("Admin", body_style), Paragraph("Fetch system KPIs, financial ledgers, & audit logs", body_style)],
-        [Paragraph("GET/POST", body_style), Paragraph("<code>/api/favorites</code>", body_style), Paragraph("Guest", body_style), Paragraph("Fetch and toggle bookmarked resort IDs", body_style)],
-        [Paragraph("POST", body_style), Paragraph("<code>/api/admin/roles</code>", body_style), Paragraph("Admin", body_style), Paragraph("Create custom operational role with permission array", body_style)],
-        [Paragraph("POST", body_style), Paragraph("<code>/api/admin/staff</code>", body_style), Paragraph("Admin", body_style), Paragraph("Create staff account & assign department/role", body_style)],
-        [Paragraph("POST", body_style), Paragraph("<code>/api/admin/departments</code>", body_style), Paragraph("Admin", body_style), Paragraph("Create new resort operational department", body_style)],
-        [Paragraph("POST", body_style), Paragraph("<code>/api/admin/services</code>", body_style), Paragraph("Admin", body_style), Paragraph("Create new resort add-on service experience", body_style)],
+    story.append(Paragraph(
+        "The relational data model is defined in <code>prisma/schema.prisma</code> and enforced via PostgreSQL constraints. "
+        "Below is the complete data dictionary detailing every entity, column, data type, and relation:",
+        body_style
+    ))
+
+    # User Entity
+    story.append(Paragraph("<b>1. User Entity (`users` table):</b>", h2_style))
+    user_fields = [
+        [Paragraph("<b>Field Name</b>", body_style), Paragraph("<b>Type</b>", body_style), Paragraph("<b>Constraints</b>", body_style), Paragraph("<b>Description</b>", body_style)],
+        [Paragraph("id", body_style), Paragraph("String (UUID)", body_style), Paragraph("Primary Key, `@default(uuid())`", body_style), Paragraph("Unique user identifier", body_style)],
+        [Paragraph("email", body_style), Paragraph("String", body_style), Paragraph("Unique, Indexed", body_style), Paragraph("Account login email address", body_style)],
+        [Paragraph("password", body_style), Paragraph("String", body_style), Paragraph("Required", body_style), Paragraph("Bcrypt-hashed password string", body_style)],
+        [Paragraph("fullName", body_style), Paragraph("String", body_style), Paragraph("Required", body_style), Paragraph("Full display name of user", body_style)],
+        [Paragraph("role", body_style), Paragraph("Enum (RoleEnum)", body_style), Paragraph("Default: `GUEST`", body_style), Paragraph("Access level: `GUEST`, `STAFF`, `ADMIN`", body_style)],
+        [Paragraph("isVerified", body_style), Paragraph("Boolean", body_style), Paragraph("Default: `false`", body_style), Paragraph("Indicates email verification status", body_style)],
+        [Paragraph("verificationCode", body_style), Paragraph("String?", body_style), Paragraph("Nullable", body_style), Paragraph("6-digit email OTP code", body_style)],
     ]
-    t_api = Table(api_routes, colWidths=[55, 130, 95, 220])
-    t_api.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1F2937")),
+    t_user = Table(user_fields, colWidths=[90, 80, 140, 190])
+    t_user.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#292524")),
         ('TEXTCOLOR', (0,0), (-1,0), colors.white),
         ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
         ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
         ('TOPPADDING', (0,0), (-1,-1), 4),
         ('BOTTOMPADDING', (0,0), (-1,-1), 4),
     ]))
-    story.append(t_api)
+    story.append(t_user)
+    story.append(Spacer(1, 8))
 
-    story.append(Spacer(1, 20))
+    # Reservation Entity
+    story.append(Paragraph("<b>2. Reservation Entity (`reservations` table):</b>", h2_style))
+    res_fields = [
+        [Paragraph("<b>Field Name</b>", body_style), Paragraph("<b>Type</b>", body_style), Paragraph("<b>Constraints</b>", body_style), Paragraph("<b>Description</b>", body_style)],
+        [Paragraph("id", body_style), Paragraph("String (UUID)", body_style), Paragraph("Primary Key", body_style), Paragraph("Unique reservation booking ID", body_style)],
+        [Paragraph("checkIn", body_style), Paragraph("DateTime", body_style), Paragraph("Required", body_style), Paragraph("Scheduled arrival timestamp", body_style)],
+        [Paragraph("checkOut", body_style), Paragraph("DateTime", body_style), Paragraph("Required", body_style), Paragraph("Scheduled departure timestamp", body_style)],
+        [Paragraph("status", body_style), Paragraph("Enum", body_style), Paragraph("Default: `PENDING`", body_style), Paragraph("Status: `PENDING`, `CONFIRMED`, `CANCELED`, `CHECKED_IN`", body_style)],
+        [Paragraph("totalAmount", body_style), Paragraph("Decimal(10,2)", body_style), Paragraph("Required", body_style), Paragraph("Grand total stay cost (room + add-ons)", body_style)],
+        [Paragraph("guestId", body_style), Paragraph("String", body_style), Paragraph("Foreign Key (Guest)", body_style), Paragraph("Link to booking guest entity", body_style)],
+        [Paragraph("roomId", body_style), Paragraph("String", body_style), Paragraph("Foreign Key (Room)", body_style), Paragraph("Link to assigned room unit", body_style)],
+    ]
+    t_res = Table(res_fields, colWidths=[90, 80, 140, 190])
+    t_res.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#292524")),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
+        ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+    ]))
+    story.append(t_res)
+    story.append(Spacer(1, 8))
 
-    # -------------------------------------------------------------------------
-    # SECTION 8: VERIFICATION & DEPLOYMENT CHECKLIST
-    # -------------------------------------------------------------------------
-    story.append(Paragraph("8. Build Verification & Deployment Readiness", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=12))
+    # Payment Entity
+    story.append(Paragraph("<b>3. Payment Entity (`payments` table):</b>", h2_style))
+    pay_fields = [
+        [Paragraph("<b>Field Name</b>", body_style), Paragraph("<b>Type</b>", body_style), Paragraph("<b>Constraints</b>", body_style), Paragraph("<b>Description</b>", body_style)],
+        [Paragraph("id", body_style), Paragraph("String (UUID)", body_style), Paragraph("Primary Key", body_style), Paragraph("Unique payment transaction ID", body_style)],
+        [Paragraph("amount", body_style), Paragraph("Decimal(10,2)", body_style), Paragraph("Required", body_style), Paragraph("Payment currency amount", body_style)],
+        [Paragraph("method", body_style), Paragraph("String", body_style), Paragraph("Required", body_style), Paragraph("Payment provider string e.g. 'Dodo Payments (ID: pay_123)'", body_style)],
+        [Paragraph("status", body_style), Paragraph("Enum", body_style), Paragraph("Default: `PENDING`", body_style), Paragraph("Status: `PENDING`, `COMPLETED`, `FAILED`, `REFUNDED`", body_style)],
+        [Paragraph("reservationId", body_style), Paragraph("String", body_style), Paragraph("Foreign Key (Reservation)", body_style), Paragraph("Link to parent reservation", body_style)],
+    ]
+    t_pay = Table(pay_fields, colWidths=[90, 80, 140, 190])
+    t_pay.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#292524")),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
+        ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+    ]))
+    story.append(t_pay)
 
-    story.append(Paragraph("<b>Automated Build Verification Output:</b>", h2_style))
-    story.append(Paragraph("• <b>TypeScript Compiler Check (`npx tsc --noEmit`)</b>: Clean compilation with <b>0 errors</b>.", bullet_style))
-    story.append(Paragraph("• <b>Next.js Production Build (`npx next build`)</b>: Compiled and optimized <b>32 static & dynamic routes</b> in 4.1 seconds with zero build warnings.", bullet_style))
-    story.append(Paragraph("• <b>Git Remote Synchronization</b>: All changes committed and pushed to <code>CodeFaisalDev/Resort-Booking-Webapp</code> (branch `main`).", bullet_style))
+    story.append(PageBreak())
 
-    story.append(Spacer(1, 20))
-    story.append(Paragraph("<i>End of Official Technical Documentation — Bookme.com System Architecture</i>", ParagraphStyle('FooterNote', fontName='Helvetica-Oblique', fontSize=9, textColor=TEXT_MUTED, alignment=1)))
+    # =========================================================================
+    # SECTION 4: AUTHENTICATION & SECURITY SUBSYSTEM
+    # =========================================================================
+    story.append(Paragraph("4. Authentication & Security Subsystem", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
+
+    story.append(Paragraph(
+        "Security and user identity management are fundamental to Bookme.com. The application combines **NextAuth.js** "
+        "for encrypted JWT session management with custom password salting, email verification OTP codes, and fallback handlers.",
+        body_style
+    ))
+
+    story.append(Paragraph("<b>4.1 Registration Workflow (`POST /api/signup`):</b>", h2_style))
+    story.append(Paragraph("1. <b>Input Validation:</b> Validates email format, password minimum length (6 chars), and full name.", bullet_style))
+    story.append(Paragraph("2. <b>Existing Account Handling:</b> Checks if user exists. If account is verified (`isVerified = true`), returns HTTP 400 'Email already registered'.", bullet_style))
+    story.append(Paragraph("3. <b>Unverified Account Recovery:</b> If user exists but is unverified (`isVerified = false`), the route updates the password hash, generates a fresh 6-digit OTP code, and re-dispatches the email code.", bullet_style))
+    story.append(Paragraph("4. <b>Password Hashing:</b> Uses <code>bcryptjs</code> with salt round factor = 10.", bullet_style))
+    story.append(Paragraph("5. <b>Transactional Provisioning:</b> Executes a Prisma `$transaction` creating User and Guest profile records simultaneously.", bullet_style))
+
+    story.append(Paragraph("<b>4.2 Email Verification & Mailer Resilience (`src/lib/mailer.ts`):</b>", h2_style))
+    story.append(Paragraph(
+        "Nodemailer is configured to dispatch HTML email verification codes. "
+        "If SMTP credentials (`SMTP_USER` / `SMTP_PASS`) are unconfigured or fail (e.g. in local offline dev mode), "
+        "the mailer gracefully catches the error and logs the verification code directly to the server terminal, allowing registration testing without external email dependencies.",
+        body_style
+    ))
+
+    story.append(Paragraph("<b>4.3 NextAuth Credentials & Authorization Sessions (`src/lib/auth.ts`):</b>", h2_style))
+    story.append(Paragraph(
+        "NextAuth is configured with the Credentials Provider. Upon authentication:",
+        body_style
+    ))
+    story.append(Paragraph("• `authorize()` checks user existence, verifies password hash with `bcrypt.compare()`, and checks `isVerified === true`.", bullet_style))
+    story.append(Paragraph("• Token callback injects `user.role` (`GUEST`, `STAFF`, `ADMIN`) and `user.type` into the encrypted JWT token.", bullet_style))
+    story.append(Paragraph("• Session callback exposes `session.user.role` and `session.user.id` to client components and backend API endpoints.", bullet_style))
+
+    story.append(Spacer(1, 10))
+
+    # =========================================================================
+    # SECTION 5: DYNAMIC TIERED CANCELLATION ENGINE
+    # =========================================================================
+    story.append(Paragraph("5. Dynamic Tiered Cancellation & Refund Engine", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
+
+    story.append(Paragraph(
+        "To provide guest satisfaction while protecting resort revenue, Bookme.com implements a **Dynamic Tiered Cancellation Policy** "
+        "enforcing a maximum fee cap of **10%**. Guests can cancel any stay at any time, with refund percentages dynamically calculated based on check-in notice:",
+        body_style
+    ))
+
+    tier_spec_data = [
+        [Paragraph("<b>Policy Tier</b>", body_style), Paragraph("<b>Notice Period</b>", body_style), Paragraph("<b>Refund %</b>", body_style), Paragraph("<b>Fee Retained</b>", body_style), Paragraph("<b>Operational Guarantee</b>", body_style)],
+        [Paragraph("<b>Tier 1: Full Refund</b>", body_style), Paragraph("≥ 7 Days before Check-In", body_style), Paragraph("<b>100% Refund</b>", body_style), Paragraph("0% ($0.00)", body_style), Paragraph("Complete money-back guarantee with zero penalty.", body_style)],
+        [Paragraph("<b>Tier 2: Light Fee</b>", body_style), Paragraph("3 to 7 Days before Check-In", body_style), Paragraph("<b>95% Refund</b>", body_style), Paragraph("5% Fee", body_style), Paragraph("Minor processing fee retained to cover gateway costs.", body_style)],
+        [Paragraph("<b>Tier 3: Max Fee Cap</b>", body_style), Paragraph("< 3 Days / Same-Day / Past", body_style), Paragraph("<b>90% Refund</b>", body_style), Paragraph("<b>10% Max Fee</b>", body_style), Paragraph("Capped at 10% maximum fee; guest receives 90% refund.", body_style)],
+    ]
+    t_tier_spec = Table(tier_spec_data, colWidths=[100, 110, 80, 80, 130])
+    t_tier_spec.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#B45309")),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
+        ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ]))
+    story.append(t_tier_spec)
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph("<b>5.1 Interactive Cancellation Modal Workflow (`src/app/dashboard/page.tsx`):</b>", h2_style))
+    story.append(Paragraph("1. User clicks **Cancel Booking** on any reservation card in the Guest Portal.", bullet_style))
+    story.append(Paragraph("2. Front-end calculates `daysRemaining = (checkInTime - Date.now()) / 24h`.", bullet_style))
+    story.append(Paragraph("3. Modal renders a visual Policy Tier Badge (`100% Full Refund`, `95% Refund (5% Fee)`, `90% Refund (10% Max Fee)`).", bullet_style))
+    story.append(Paragraph("4. Displays a financial summary table: Total Paid, Fee Deduction (-$), Net Refund to Source Card ($).", bullet_style))
+    story.append(Paragraph("5. Enforces explicit user consent via agreement checkbox (`[x] I have read and accept the cancellation fee policy terms.`).", bullet_style))
+
+    story.append(Paragraph("<b>5.2 Backend Refund Execution (`DELETE /api/book`):</b>", h2_style))
+    story.append(Paragraph("1. Authorizes guest ownership of reservation ID (`reservation.guestId === session.user.id`).", bullet_style))
+    story.append(Paragraph("2. Computes exact `refundAmount = totalAmount * (refundPercent / 100)` and `retentionFee = totalAmount - refundAmount`.", bullet_style))
+    story.append(Paragraph("3. Extracts Dodo Payment ID string and dispatches POST refund to Dodo API (`https://test.dodopayments.com/refunds`).", bullet_style))
+    story.append(Paragraph("4. Executes database transaction updating reservation `status: 'CANCELED'` and payment `status: 'REFUNDED'`. ", bullet_style))
+    story.append(Paragraph("5. Dispatches HTML receipt email to guest with financial breakdown.", bullet_style))
+
+    story.append(PageBreak())
+
+    # =========================================================================
+    # SECTION 6: PAYMENT GATEWAY INTEGRATION
+    # =========================================================================
+    story.append(Paragraph("6. Dodo Payments Gateway Integration", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
+
+    story.append(Paragraph(
+        "Bookme.com integrates with <b>Dodo Payments API</b> for credit card processing and automated REST refunding. "
+        "The checkout lifecycle operates across three primary stages:",
+        body_style
+    ))
+
+    story.append(Paragraph("<b>1. Checkout Session Creation (`POST /api/checkout/[id]/session`):</b>", h2_style))
+    story.append(Paragraph("• Reads grand total invoice amount (room base cost + add-on experiences + 15% resort taxes).", bullet_style))
+    story.append(Paragraph("• Converts total amount to integer cents (`amountInCents = Math.round(totalAmount * 100)`).", bullet_style))
+    story.append(Paragraph("• Sends POST request to `https://test.dodopayments.com/checkouts` with product details and return URL.", bullet_style))
+    story.append(Paragraph("• Returns hosted checkout URL string (`data.checkout_url`) to client for immediate redirect.", bullet_style))
+
+    story.append(Paragraph("<b>2. Payment Webhook Processor (`POST /api/webhooks/dodo`):</b>", h2_style))
+    story.append(Paragraph("• Receives asynchronous payment status webhooks from Dodo Payments.", bullet_style))
+    story.append(Paragraph("• On `payment.succeeded` event, updates reservation status from `PENDING` to `CONFIRMED` and payment record status to `COMPLETED`.", bullet_style))
+    story.append(Paragraph("• Generates room assignment (`room.status = 'OCCUPIED'`) and dispatches booking confirmation email.", bullet_style))
+
+    story.append(Spacer(1, 10))
+
+    # =========================================================================
+    # SECTION 7: ROLE-BASED DASHBOARDS & OPERATIONAL DESKS
+    # =========================================================================
+    story.append(Paragraph("7. Role-Based Dashboard Desks", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
+
+    story.append(Paragraph(
+        "The dashboard (`src/app/dashboard/page.tsx`) renders dynamic role-specific interfaces based on `session.user.role`:",
+        body_style
+    ))
+
+    story.append(Paragraph("<b>7.1 Guest Portal View:</b>", h2_style))
+    story.append(Paragraph("• <b>My Bookings Tab:</b> Displays active and historical stay cards with status badges (`CONFIRMED`, `PENDING`, `CANCELED`), stay dates, suite categories, and 'Cancel Booking' triggers.", bullet_style))
+    story.append(Paragraph("• <b>Saved Favorites Tab:</b> Grid view of bookmarked resorts with high-resolution imagery, location tags, ratings, and instant booking triggers.", bullet_style))
+    story.append(Paragraph("• <b>My Profile Tab:</b> User account summary card showing verification badge, total bookings count, and saved resorts count.", bullet_style))
+
+    story.append(Paragraph("<b>7.2 Staff Task Queue & Housekeeping View:</b>", h2_style))
+    story.append(Paragraph("• <b>Housekeeping Desk:</b> Real-time room status grid (`CLEAN`, `DIRTY`, `IN_PROGRESS`, `INSPECTED`). Staff can toggle cleaning statuses with one click.", bullet_style))
+    story.append(Paragraph("• <b>Guest Request Queue:</b> Lists active guest requests (room service, extra towels, shuttle requests) with status filters and staff assignment selectors.", bullet_style))
+
+    story.append(Spacer(1, 10))
+
+    # =========================================================================
+    # SECTION 8: ADMIN CONSOLE & RBAC GOVERNANCE
+    # =========================================================================
+    story.append(Paragraph("8. Admin Console & RBAC Governance", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
+
+    story.append(Paragraph(
+        "Administrative operators (`role === 'ADMIN'`) have access to system-wide management controls:",
+        body_style
+    ))
+
+    story.append(Paragraph("• <b>Granular RBAC Permissions:</b> Custom operational roles can be provisioned with specific permission keys (`MANAGE_BOOKINGS`, `HOUSEKEEPING`, `FINANCE_ACCESS`, `STAFF_MANAGEMENT`, `DEPT_MANAGEMENT`, `MANAGE_SERVICES`, `PROPERTIES_MANAGEMENT`).", bullet_style))
+    story.append(Paragraph("• <b>Staff Directory & Department Allocation:</b> Add new staff members, assign operational roles, and link them to resort departments.", bullet_style))
+    story.append(Paragraph("• <b>Properties & Room Inventory:</b> Create new resort listings, edit suite categories, manage base night rates, and archive maintenance units.", bullet_style))
+    story.append(Paragraph("• <b>Audit CSV Exports:</b> Embedded CSV generator buttons (`exportBookingsCSV`, `exportFinanceCSV`) for offline financial auditing.", bullet_style))
+
+    story.append(PageBreak())
+
+    # =========================================================================
+    # SECTION 9: COMPLETE API ROUTE SPECIFICATION
+    # =========================================================================
+    story.append(Paragraph("9. Complete API Endpoint Specifications", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
+
+    story.append(Paragraph(
+        "Below is the exhaustive specification table for all 22 backend API endpoints:",
+        body_style
+    ))
+
+    api_full_data = [
+        [Paragraph("<b>HTTP</b>", body_style), Paragraph("<b>Endpoint Path</b>", body_style), Paragraph("<b>Auth Scope</b>", body_style), Paragraph("<b>Request Payload / Params</b>", body_style), Paragraph("<b>Response Summary & Function</b>", body_style)],
+        [Paragraph("GET", body_style), Paragraph("`/api/resorts`", body_style), Paragraph("Public", body_style), Paragraph("`?page=1&limit=12&query=Bali`", body_style), Paragraph("Returns paginated resort listings & total count", body_style)],
+        [Paragraph("GET", body_style), Paragraph("`/api/resorts/[id]`", body_style), Paragraph("Public", body_style), Paragraph("URL param `id`", body_style), Paragraph("Returns resort detail, room types & services", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/signup`", body_style), Paragraph("Public", body_style), Paragraph("`{ email, password, fullName }`", body_style), Paragraph("Hashes password, sends OTP code & returns user ID", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/signup/verify`", body_style), Paragraph("Public", body_style), Paragraph("`{ email, code }`", body_style), Paragraph("Validates OTP code & sets `isVerified = true`", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/signup/resend`", body_style), Paragraph("Public", body_style), Paragraph("`{ email }`", body_style), Paragraph("Generates & dispatches fresh 6-digit OTP code", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/auth/[...nextauth]`", body_style), Paragraph("Public", body_style), Paragraph("`{ email, password }`", body_style), Paragraph("NextAuth JWT login endpoint", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/book`", body_style), Paragraph("Guest", body_style), Paragraph("`{ roomTypeId, checkIn, checkOut, serviceIds }`", body_style), Paragraph("Secures draft reservation & returns reservationId", body_style)],
+        [Paragraph("DELETE", body_style), Paragraph("`/api/book`", body_style), Paragraph("Guest/Staff", body_style), Paragraph("`?id={reservationId}`", body_style), Paragraph("Executes tiered refund & updates DB to CANCELED", body_style)],
+        [Paragraph("GET", body_style), Paragraph("`/api/checkout/[id]`", body_style), Paragraph("Guest", body_style), Paragraph("URL param `id`", body_style), Paragraph("Returns checkout session summary & total invoice", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/checkout/[id]/session`", body_style), Paragraph("Guest", body_style), Paragraph("`{ guestPhone }`", body_style), Paragraph("Creates Dodo checkout & returns hosted payment URL", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/webhooks/dodo`", body_style), Paragraph("System", body_style), Paragraph("Dodo webhook payload", body_style), Paragraph("Updates reservation to CONFIRMED & payment to COMPLETED", body_style)],
+        [Paragraph("GET", body_style), Paragraph("`/api/dashboard/guest`", body_style), Paragraph("Guest", body_style), Paragraph("Session JWT", body_style), Paragraph("Returns guest bookings, favorites, & profile info", body_style)],
+        [Paragraph("GET", body_style), Paragraph("`/api/dashboard/staff`", body_style), Paragraph("Staff", body_style), Paragraph("Session JWT", body_style), Paragraph("Returns housekeeping task list & room statuses", body_style)],
+        [Paragraph("GET", body_style), Paragraph("`/api/dashboard/admin`", body_style), Paragraph("Admin", body_style), Paragraph("Session JWT", body_style), Paragraph("Returns system KPIs, audit logs & revenue ledgers", body_style)],
+        [Paragraph("GET", body_style), Paragraph("`/api/favorites`", body_style), Paragraph("Guest", body_style), Paragraph("Session JWT", body_style), Paragraph("Returns array of favorite resort IDs", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/favorites`", body_style), Paragraph("Guest", body_style), Paragraph("`{ resortId }`", body_style), Paragraph("Toggles bookmark status of resort ID", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/admin/roles`", body_style), Paragraph("Admin", body_style), Paragraph("`{ name, permissions }`", body_style), Paragraph("Creates custom operational role entity", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/admin/staff`", body_style), Paragraph("Admin", body_style), Paragraph("`{ email, password, name, roleId, deptId }`", body_style), Paragraph("Provisions new staff account & links department", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/admin/departments`", body_style), Paragraph("Admin", body_style), Paragraph("`{ name, manager }`", body_style), Paragraph("Creates operational resort department entity", body_style)],
+        [Paragraph("POST", body_style), Paragraph("`/api/admin/services`", body_style), Paragraph("Admin", body_style), Paragraph("`{ name, category, price, resortId }`", body_style), Paragraph("Creates add-on service experience entity", body_style)],
+    ]
+    t_api_full = Table(api_full_data, colWidths=[40, 115, 65, 140, 140])
+    t_api_full.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#0F172A")),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('BOX', (0,0), (-1,-1), 1, BORDER_COLOR),
+        ('INNERGRID', (0,0), (-1,-1), 0.5, BORDER_COLOR),
+        ('TOPPADDING', (0,0), (-1,-1), 3.5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 3.5),
+    ]))
+    story.append(t_api_full)
+
+    story.append(Spacer(1, 14))
+
+    # =========================================================================
+    # SECTION 10: ENVIRONMENT CONFIGURATION & SETUP MANUAL
+    # =========================================================================
+    story.append(Paragraph("10. Environment Variables & Setup Guide", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY, spaceBefore=2, spaceAfter=10))
+
+    story.append(Paragraph(
+        "To deploy or run Bookme.com locally, create a <code>.env</code> file in the project root containing:",
+        body_style
+    ))
+
+    env_snippet = """# Database Connection
+DATABASE_URL="postgresql://user:password@localhost:5432/resort_db?schema=public"
+
+# NextAuth Authentication Config
+NEXTAUTH_SECRET="your-super-secret-jwt-key-change-in-production"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Nodemailer SMTP Email Dispatch
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-specific-password"
+
+# Payment Gateway Keys
+DODO_PAYMENTS_API_KEY="test_dodo_api_key_string"
+TO_EMAIL="code.faisal.dev@gmail.com" """
+
+    story.append(Paragraph(env_snippet.replace("\n", "<br/>").replace(" ", "&nbsp;"), code_style))
+
+    story.append(Paragraph("<b>Step-by-Step Command Execution Guide:</b>", h2_style))
+    story.append(Paragraph("1. <b>Install Dependencies:</b> <code>npm install</code>", bullet_style))
+    story.append(Paragraph("2. <b>Database Migration Push:</b> <code>npx prisma db push</code>", bullet_style))
+    story.append(Paragraph("3. <b>Seed Database:</b> <code>node prisma/seed.js</code>", bullet_style))
+    story.append(Paragraph("4. <b>TypeScript Compiler Audit:</b> <code>npx tsc --noEmit</code>", bullet_style))
+    story.append(Paragraph("5. <b>Launch Development Server:</b> <code>npm run dev</code>", bullet_style))
+    story.append(Paragraph("6. <b>Production Build Audit:</b> <code>npx next build</code>", bullet_style))
+
+    story.append(Spacer(1, 14))
+    story.append(Paragraph("<i>End of Official Technical System Manual — Bookme.com System Architecture v1.0.0</i>", ParagraphStyle('FooterNote2', fontName='Helvetica-Oblique', fontSize=8.5, textColor=TEXT_MUTED, alignment=1)))
 
     doc.build(story, canvasmaker=NumberedCanvas)
-    print("PDF Generated Successfully:", pdf_filename)
+    print("Exhaustive PDF Generated Successfully:", pdf_filename)
 
 if __name__ == '__main__':
     build_pdf()
