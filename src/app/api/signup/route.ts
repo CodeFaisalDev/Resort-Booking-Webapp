@@ -37,8 +37,8 @@ export async function POST(req: Request) {
     }
 
     const existingGuest = await prisma.guest.findUnique({ where: { email } });
-    if (existingGuest) {
-      return NextResponse.json({ error: "Email already registered" }, { status: 400 });
+    if (existingGuest && existingGuest.isVerified) {
+      return NextResponse.json({ error: "Email already registered and verified. Please log in." }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -47,20 +47,35 @@ export async function POST(req: Request) {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const verificationExpires = new Date(Date.now() + 15 * 60 * 1000);
 
-    // 3. Create unverified Guest profile in database
-    const newGuest = await prisma.guest.create({
-      data: {
-        fullName,
-        email,
-        password: hashedPassword,
-        phone: "",
-        nationality: "",
-        idProofNum: "",
-        isVerified: false,
-        verificationCode,
-        verificationExpires
-      },
-    });
+    let targetGuest;
+
+    if (existingGuest && !existingGuest.isVerified) {
+      // Update existing unverified guest with new password & code
+      targetGuest = await prisma.guest.update({
+        where: { email },
+        data: {
+          fullName,
+          password: hashedPassword,
+          verificationCode,
+          verificationExpires
+        }
+      });
+    } else {
+      // Create unverified Guest profile in database
+      targetGuest = await prisma.guest.create({
+        data: {
+          fullName,
+          email,
+          password: hashedPassword,
+          phone: "",
+          nationality: "",
+          idProofNum: "",
+          isVerified: false,
+          verificationCode,
+          verificationExpires
+        },
+      });
+    }
 
     // 4. Send email confirmation code
     const htmlBody = `
@@ -92,7 +107,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       message: "Guest registered successfully. Please verify your email.",
       needsVerification: true,
-      email: newGuest.email 
+      email: targetGuest.email 
     });
   } catch (error: any) {
     console.error("Signup error:", error);

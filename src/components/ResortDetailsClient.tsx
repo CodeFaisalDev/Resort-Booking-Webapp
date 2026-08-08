@@ -583,6 +583,28 @@ export default function ResortDetailsClient({ resort, services }: ResortDetailsC
                 </div>
               )}
 
+              {/* Dynamic Cancellation Policy Warning Banner */}
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2 text-[11px]">
+                <div className="flex items-center gap-2 font-bold text-amber-400 uppercase tracking-wider text-[10px] font-mono">
+                  <ShieldAlert className="h-3.5 w-3.5" />
+                  <span>Cancellation & Refund Policy Terms</span>
+                </div>
+                <div className="space-y-1.5 text-stone-300">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-green-400 shrink-0" />
+                    <span><strong>≥ 7 Days Prior:</strong> 100% Full Refund Guarantee ($0 Fee)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
+                    <span><strong>3 to 7 Days Prior:</strong> 95% Refund (5% Processing Fee)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
+                    <span><strong>Within 72 Hours:</strong> 90% Refund (10% Max Fee Cap)</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Submit CTA Button */}
               <button
                 type="submit"

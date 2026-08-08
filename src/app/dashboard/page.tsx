@@ -63,14 +63,22 @@ export default function DashboardPage() {
   const initialTab = (searchParams?.get('tab') as any) || 'overview';
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'rooms' | 'depts' | 'staff' | 'roles' | 'services' | 'finance' | 'audits' | 'resorts'>(initialTab);
 
+  // Active sub-tab for Guest ('reservations' | 'favorites' | 'profile')
+  const [guestTab, setGuestTab] = useState<'reservations' | 'favorites' | 'profile'>('reservations');
+
   // Synchronize activeTab with URL
   const handleTabChange = (tab: any) => {
     setActiveTab(tab);
     router.replace(`/dashboard?tab=${tab}`, { scroll: false });
   };
 
+  const handleGuestTabChange = (tab: any) => {
+    setGuestTab(tab);
+    router.replace(`/dashboard?tab=${tab}`, { scroll: false });
+  };
+
   // Loading & base state data
-  const [guestData, setGuestData] = useState<any>(null);
+  const [guestData, setGuestData] = useState<{ reservations: any[]; favorites: any[] }>({ reservations: [], favorites: [] });
   const [adminData, setAdminData] = useState<any>(null);
   const [staffData, setStaffData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -186,6 +194,8 @@ export default function DashboardPage() {
 
   // Confirmation Modals
   const [cancelingId, setCancelingId] = useState<string | null>(null);
+  const [confirmCancelBooking, setConfirmCancelBooking] = useState<any | null>(null);
+  const [cancelAgreed, setCancelAgreed] = useState(false);
   const [deletingDeptId, setDeletingDeptId] = useState<string | null>(null);
   const [deletingStaffId, setDeletingStaffId] = useState<string | null>(null);
   const [deletingResortId, setDeletingResortId] = useState<string | null>(null);
@@ -364,11 +374,14 @@ export default function DashboardPage() {
     const userType = (session.user as any).type;
     const userRole = (session.user as any).role;
     try {
-      if (userType === 'guest') {
+      if (userType === 'guest' || userRole === 'GUEST') {
         if (!silent) setLoading(true);
         const res = await fetch('/api/dashboard/guest');
         const data = await res.json();
-        setGuestData(data.reservations || []);
+        setGuestData({
+          reservations: data.reservations || [],
+          favorites: data.favorites || []
+        });
       } else if (userType === 'staff') {
         if (userRole === 'ADMIN') {
           await fetchOverviewData(silent);
@@ -752,16 +765,23 @@ export default function DashboardPage() {
     setActionLoadingId(reservationId);
     try {
       const res = await fetch(`/api/book?id=${reservationId}`, { method: 'DELETE' });
+      const data = await res.json();
       if (res.ok) {
-        showToast('Reservation canceled.', 'success');
+        showToast(data.message || 'Reservation canceled successfully.', 'success');
         setCancelingId(null);
         dashboardCache.invalidate('overview');
         dashboardCache.invalidate('bookings');
-        await fetchOverviewData(true);
-        await fetchBookingsData(true);
+        await fetchDashboardData(true);
+        if (activeTab === 'overview') await fetchOverviewData(true);
+        if (activeTab === 'bookings') await fetchBookingsData(true);
+      } else {
+        showToast(data.error || 'Failed to cancel reservation.', 'error');
       }
-    } catch (err) { showToast('Error canceling reservation.', 'error'); }
-    finally { setActionLoadingId(null); }
+    } catch (err) {
+      showToast('Error canceling reservation.', 'error');
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const handleCompleteTask = async (assignmentId: string) => {
@@ -996,7 +1016,7 @@ export default function DashboardPage() {
                 <span className="font-heading text-lg font-bold text-white">BOOKME<span className="text-brand-accent">.COM</span></span>
                 <button onClick={() => setIsMobileOpen(false)} className="p-1 rounded-lg text-[#8a8a8a] hover:text-white"><X className="h-5 w-5" /></button>
               </div>
-              <SidebarNav activeTab={activeTab} setActiveTab={(t) => { handleTabChange(t); setIsMobileOpen(false); }} userRole={userRole} collapsed={false} />
+              <SidebarNav activeTab={activeTab} setActiveTab={(t) => { handleTabChange(t); setIsMobileOpen(false); }} guestTab={guestTab} setGuestTab={(t) => { handleGuestTabChange(t); setIsMobileOpen(false); }} userRole={userRole} collapsed={false} />
             </div>
             <button onClick={() => signOut({ callbackUrl: '/' })} className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs uppercase font-bold text-red-400 hover:bg-red-500/10"><LogOut className="h-4 w-4" /> Sign Out</button>
           </aside>
@@ -1045,7 +1065,7 @@ export default function DashboardPage() {
           )}
 
           {/* Navigation Links */}
-          <SidebarNav activeTab={activeTab} setActiveTab={handleTabChange} userRole={userRole} collapsed={isSidebarCollapsed} />
+          <SidebarNav activeTab={activeTab} setActiveTab={handleTabChange} guestTab={guestTab} setGuestTab={handleGuestTabChange} userRole={userRole} collapsed={isSidebarCollapsed} />
         </div>
 
         {/* Sign Out Button */}
@@ -1073,7 +1093,7 @@ export default function DashboardPage() {
             </button>
             <h2 className="text-xs font-bold uppercase tracking-wider text-brand-accent flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-brand-accent" />
-              {userRole === 'ADMIN' ? `${activeTab.toUpperCase()} CONTROLS` : 'STAFF TASK QUEUE'}
+              {userRole === 'ADMIN' ? `${activeTab.toUpperCase()} CONTROLS` : userRole === 'STAFF' ? 'STAFF TASK QUEUE' : `${guestTab.toUpperCase()} PORTAL`}
             </h2>
           </div>
           <div className="text-[10px] text-[#A0A0A0] font-semibold flex items-center gap-3">
@@ -1094,6 +1114,156 @@ export default function DashboardPage() {
         {/* INNER SCROLL CONTENT CONTAINER */}
         <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 max-w-7xl w-full mx-auto space-y-6 overflow-hidden">
           
+          {/* GUEST PORTAL VIEW */}
+          {userRole === 'GUEST' && (
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden space-y-6">
+              {/* Guest Tab 1: Reservations */}
+              {guestTab === 'reservations' && (
+                <div className="bg-[#1A1A1A]/90 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/5 shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
+                  <div className="shrink-0 pb-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h2 className="font-heading text-xl font-normal text-white">My Reservations</h2>
+                      <p className="text-xs text-[#8a8a8a] mt-0.5">Manage your stay bookings and luxury resort experiences</p>
+                    </div>
+                    <button onClick={() => router.push('/resorts')} className="bg-brand-accent hover:bg-brand-accent-hover text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg cursor-pointer transition-all">
+                      <Plus className="h-4 w-4" /> Book New Stay
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto min-h-0 py-6 pr-1 space-y-4">
+                    {(!guestData?.reservations || guestData.reservations.length === 0) ? (
+                      <div className="text-center py-16 space-y-4">
+                        <Calendar className="h-12 w-12 text-[#8a8a8a] mx-auto opacity-40" />
+                        <p className="text-[#8a8a8a] text-sm">You have no active or past room reservations yet.</p>
+                        <button onClick={() => router.push('/resorts')} className="bg-brand-accent text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider inline-flex items-center gap-2 cursor-pointer shadow-lg hover:bg-brand-accent-hover transition-all">
+                          Explore Luxury Resorts
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4">
+                        {guestData.reservations.map((res: any) => (
+                          <div key={res.id} className="p-6 rounded-2xl bg-[#141414] border border-white/5 shadow-xl flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-white/10 transition-all">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <span className="font-bold text-white text-base">Room {res.room?.roomNum}</span>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${
+                                  res.status === 'CONFIRMED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                                  res.status === 'PENDING' ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/20' :
+                                  'bg-red-500/10 text-red-400 border-red-500/20'
+                                }`}>
+                                  {res.status}
+                                </span>
+                              </div>
+                              <span className="block text-xs text-[#8a8a8a] font-medium">{res.room?.roomType?.name} &bull; Check In: <strong className="text-white">{new Date(res.checkIn).toLocaleDateString()}</strong> &bull; Check Out: <strong className="text-white">{new Date(res.checkOut).toLocaleDateString()}</strong></span>
+                              <span className="block text-[11px] text-brand-accent font-bold">Total Stay Amount: ${Number(res.totalAmount).toFixed(2)}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 shrink-0">
+                              {res.status !== 'CANCELED' && (
+                                <button
+                                  disabled={actionLoadingId === res.id}
+                                  onClick={() => { setConfirmCancelBooking(res); setCancelAgreed(false); }}
+                                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all cursor-pointer"
+                                >
+                                  {actionLoadingId === res.id ? 'Canceling...' : 'Cancel Booking'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Guest Tab 2: Favorites */}
+              {guestTab === 'favorites' && (
+                <div className="bg-[#1A1A1A]/90 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/5 shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
+                  <div className="shrink-0 pb-6 border-b border-white/5">
+                    <h2 className="font-heading text-xl font-normal text-white">Saved Favorites</h2>
+                    <p className="text-xs text-[#8a8a8a] mt-0.5">Your shortlisted luxury resorts and dream destinations</p>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto min-h-0 py-6 pr-1">
+                    {(!guestData?.favorites || guestData.favorites.length === 0) ? (
+                      <div className="text-center py-16 space-y-4">
+                        <Sparkles className="h-12 w-12 text-[#8a8a8a] mx-auto opacity-40" />
+                        <p className="text-[#8a8a8a] text-sm">You haven't saved any resorts to your favorites list yet.</p>
+                        <button onClick={() => router.push('/resorts')} className="bg-brand-accent text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider inline-flex items-center gap-2 cursor-pointer hover:bg-brand-accent-hover transition-all">
+                          Browse Destinations
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {guestData.favorites.map((fav: any) => (
+                          <div key={fav.id} className="rounded-2xl border border-white/5 bg-[#141414] overflow-hidden p-5 space-y-4 flex flex-col justify-between hover:border-white/10 transition-all">
+                            <div className="space-y-3">
+                              {fav.resort?.images?.[0] && (
+                                <img src={fav.resort.images[0]} alt={fav.resort.name} className="h-40 w-full object-cover rounded-xl" />
+                              )}
+                              <div className="flex justify-between items-start">
+                                <h3 className="font-bold text-white text-base">{fav.resort?.name}</h3>
+                                <span className="text-xs font-bold text-yellow-400">★ {fav.resort?.rating}</span>
+                              </div>
+                              <p className="text-xs text-[#8a8a8a] line-clamp-2">{fav.resort?.description}</p>
+                              <span className="text-[10px] text-brand-accent font-bold uppercase tracking-wider block">📍 {fav.resort?.location}</span>
+                            </div>
+                            <button
+                              onClick={() => router.push(`/resorts/${fav.resort?.id}`)}
+                              className="w-full bg-brand-accent/10 hover:bg-brand-accent text-brand-accent hover:text-white border border-brand-accent/30 font-bold uppercase text-xs py-2.5 rounded-xl transition-all cursor-pointer"
+                            >
+                              View & Book Resort
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Guest Tab 3: Profile */}
+              {guestTab === 'profile' && (
+                <div className="bg-[#1A1A1A]/90 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/5 shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
+                  <div className="shrink-0 pb-6 border-b border-white/5">
+                    <h2 className="font-heading text-xl font-normal text-white">Guest Account Profile</h2>
+                    <p className="text-xs text-[#8a8a8a] mt-0.5">Your registered guest account details and stay privileges</p>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto min-h-0 py-6 pr-1 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="bg-[#141414] p-6 rounded-2xl border border-white/5 space-y-4">
+                        <div className="h-16 w-16 rounded-2xl bg-brand-accent/10 border border-brand-accent/30 flex items-center justify-center text-brand-accent font-bold text-2xl">
+                          {session?.user?.name?.[0] || 'G'}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-lg">{session?.user?.name}</h3>
+                          <span className="text-xs text-[#8a8a8a] block">{session?.user?.email}</span>
+                          <span className="inline-block mt-2 px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 font-bold text-[9px] uppercase rounded-full">
+                            Verified Guest Account
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-[#141414] p-6 rounded-2xl border border-white/5 flex flex-col justify-between">
+                        <span className="text-[10px] text-[#8a8a8a] font-bold uppercase tracking-wider">Total Bookings</span>
+                        <span className="text-3xl font-bold text-brand-accent mt-2">{guestData?.reservations?.length || 0} Stay Bookings</span>
+                        <p className="text-[11px] text-[#8a8a8a] mt-4">Active and past resort reservations with bookme.com</p>
+                      </div>
+
+                      <div className="bg-[#141414] p-6 rounded-2xl border border-white/5 flex flex-col justify-between">
+                        <span className="text-[10px] text-[#8a8a8a] font-bold uppercase tracking-wider">Saved Favorites</span>
+                        <span className="text-3xl font-bold text-yellow-400 mt-2">{guestData?.favorites?.length || 0} Saved Resorts</span>
+                        <p className="text-[11px] text-[#8a8a8a] mt-4">Shortlisted luxury resort properties</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* STAFF OPERATOR VIEW */}
           {userRole === 'STAFF' && (
             <div className="bg-[#1A1A1A]/90 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white/5 shadow-2xl flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -1244,6 +1414,13 @@ export default function DashboardPage() {
                         <p className="text-xs text-[#8a8a8a] mt-0.5">Manage guest stay status and check-in procedures</p>
                       </div>
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={exportBookingsCSV}
+                          className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                          title="Export bookings as CSV report"
+                        >
+                          <FileSpreadsheet className="h-4 w-4 text-green-400" /> Export CSV
+                        </button>
                         <select
                           value={bookingPageSize}
                           onChange={(e) => { setBookingPageSize(Number(e.target.value)); setBookingPage(1); }}
@@ -1708,6 +1885,13 @@ export default function DashboardPage() {
                       <p className="text-xs text-[#8a8a8a] mt-0.5">Real-time payment logs and revenue tracking</p>
                     </div>
                     <div className="flex items-center gap-3">
+                      <button
+                        onClick={exportFinanceCSV}
+                        className="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                        title="Export payments ledger as CSV"
+                      >
+                        <FileSpreadsheet className="h-4 w-4 text-green-400" /> Export CSV
+                      </button>
                       <div className="relative">
                         <Search className="h-3.5 w-3.5 absolute left-3 top-2.5 text-[#8a8a8a]" />
                         <input
@@ -2111,13 +2295,192 @@ export default function DashboardPage() {
         </ModalWrapper>
       )}
 
+      {/* Dynamic Tiered Cancellation Confirmation Modal */}
+      {confirmCancelBooking && (() => {
+        const checkInTime = new Date(confirmCancelBooking.checkIn).getTime();
+        const daysRemaining = Math.max(0, Math.ceil((checkInTime - Date.now()) / (1000 * 60 * 60 * 24)));
+        
+        let refundPct = 100;
+        let badgeColor = 'bg-green-500/10 border-green-500/30 text-green-400';
+        let badgeText = '100% Full Refund Eligible';
+
+        if (confirmCancelBooking.status === 'CONFIRMED') {
+          if (daysRemaining >= 7) {
+            refundPct = 100;
+            badgeColor = 'bg-green-500/10 border-green-500/30 text-green-400';
+            badgeText = '100% Full Refund Eligible (>= 7 Days Notice)';
+          } else if (daysRemaining >= 3) {
+            refundPct = 95;
+            badgeColor = 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+            badgeText = '95% Refund (5% Processing Fee, 3-7 Days Notice)';
+          } else {
+            refundPct = 90;
+            badgeColor = 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+            badgeText = '90% Refund (10% Max Cancellation Fee, < 72h Notice)';
+          }
+        }
+
+        const totalPaid = Number(confirmCancelBooking.totalAmount);
+        const refundAmt = (totalPaid * refundPct) / 100;
+        const retentionFee = totalPaid - refundAmt;
+
+        return (
+          <ModalWrapper title="Confirm Reservation Cancellation" onClose={() => setConfirmCancelBooking(null)}>
+            <div className="space-y-4 text-xs select-none">
+              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
+                <span className="block font-bold text-white text-sm">Room {confirmCancelBooking.room?.roomNum} &bull; {confirmCancelBooking.room?.roomType?.name}</span>
+                <span className="block text-[#8a8a8a]">Stay: {new Date(confirmCancelBooking.checkIn).toLocaleDateString()} - {new Date(confirmCancelBooking.checkOut).toLocaleDateString()}</span>
+                <span className="block text-[10px] text-brand-accent font-bold mt-1">⏳ {daysRemaining} days remaining until check-in</span>
+              </div>
+
+              {/* Policy Tier Badge */}
+              <div className={`p-3 rounded-xl border text-center font-bold uppercase tracking-wider text-[10px] ${badgeColor}`}>
+                {badgeText}
+              </div>
+
+              {/* Refund Breakdown Card */}
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2">
+                <div className="flex justify-between text-[#8a8a8a]">
+                  <span>Total Paid Amount:</span>
+                  <span className="font-bold text-white">${totalPaid.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-red-400">
+                  <span>Retention Fee ({100 - refundPct}%):</span>
+                  <span className="font-bold">-${retentionFee.toFixed(2)}</span>
+                </div>
+                <div className="pt-2 border-t border-white/10 flex justify-between font-bold text-sm text-green-400">
+                  <span>Net Refund to Card ({refundPct}%):</span>
+                  <span>${refundAmt.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Policy Disclaimer */}
+              <p className="text-[10px] text-[#8a8a8a] leading-relaxed">
+                By confirming cancellation, your reservation status will be set to CANCELED. Net refund amount will be credited back to your original source card within 5-10 business days.
+              </p>
+
+              {/* Confirmation Checkbox */}
+              <label className="flex items-start gap-2 pt-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={cancelAgreed}
+                  onChange={(e) => setCancelAgreed(e.target.checked)}
+                  className="mt-0.5 accent-brand-accent"
+                />
+                <span className="text-[11px] text-white font-medium">
+                  I have read and accept the cancellation fee policy terms.
+                </span>
+              </label>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmCancelBooking(null)}
+                  className="px-4 py-2.5 rounded-xl border border-white/10 text-white font-bold uppercase text-[10px] hover:bg-white/5 transition-all cursor-pointer"
+                >
+                  Keep Reservation
+                </button>
+                <button
+                  type="button"
+                  disabled={!cancelAgreed || actionLoadingId === confirmCancelBooking.id}
+                  onClick={() => {
+                    const targetId = confirmCancelBooking.id;
+                    setConfirmCancelBooking(null);
+                    handleCancelBooking(targetId);
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold uppercase text-[10px] shadow-lg transition-all cursor-pointer"
+                >
+                  {actionLoadingId === confirmCancelBooking.id ? 'Processing...' : 'Confirm Cancellation'}
+                </button>
+              </div>
+            </div>
+          </ModalWrapper>
+        );
+      })()}
+
     </div>
   );
 }
 
 // ─── REUSABLE SIDEBAR NAV ──────────────────────────────────────────────────
-function SidebarNav({ activeTab, setActiveTab, userRole, collapsed }: { activeTab: string; setActiveTab: (t: any) => void; userRole: string; collapsed: boolean }) {
-  if (userRole !== 'ADMIN') return null;
+function SidebarNav({
+  activeTab,
+  setActiveTab,
+  guestTab,
+  setGuestTab,
+  userRole,
+  collapsed
+}: {
+  activeTab: string;
+  setActiveTab: (t: any) => void;
+  guestTab: string;
+  setGuestTab: (t: any) => void;
+  userRole: string;
+  collapsed: boolean;
+}) {
+  if (userRole === 'GUEST') {
+    const guestTabs = [
+      { id: 'reservations', label: 'My Bookings', icon: Calendar },
+      { id: 'favorites', label: 'Saved Favorites', icon: Sparkles },
+      { id: 'profile', label: 'My Profile', icon: User },
+    ];
+
+    return (
+      <nav className="space-y-1 select-none">
+        {guestTabs.map((t) => {
+          const Icon = t.icon;
+          const isActive = guestTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setGuestTab(t.id)}
+              className={`flex items-center gap-3 w-full px-3.5 py-3 rounded-xl text-xs uppercase font-bold transition-all text-left cursor-pointer ${
+                isActive
+                  ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
+                  : 'text-[#8a8a8a] hover:text-white hover:bg-white/5'
+              } ${collapsed ? 'justify-center px-0' : ''}`}
+              title={collapsed ? t.label : undefined}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {!collapsed && <span>{t.label}</span>}
+            </button>
+          );
+        })}
+      </nav>
+    );
+  }
+
+  if (userRole === 'STAFF') {
+    const staffTabs = [
+      { id: 'queue', label: 'Task Queue', icon: Activity },
+      { id: 'profile', label: 'My Profile', icon: User },
+    ];
+
+    return (
+      <nav className="space-y-1 select-none">
+        {staffTabs.map((t) => {
+          const Icon = t.icon;
+          const isActive = activeTab === t.id || activeTab === 'overview';
+          return (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`flex items-center gap-3 w-full px-3.5 py-3 rounded-xl text-xs uppercase font-bold transition-all text-left cursor-pointer ${
+                isActive
+                  ? 'bg-brand-accent text-white shadow-lg shadow-brand-accent/20'
+                  : 'text-[#8a8a8a] hover:text-white hover:bg-white/5'
+              } ${collapsed ? 'justify-center px-0' : ''}`}
+              title={collapsed ? t.label : undefined}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {!collapsed && <span>{t.label}</span>}
+            </button>
+          );
+        })}
+      </nav>
+    );
+  }
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Activity },

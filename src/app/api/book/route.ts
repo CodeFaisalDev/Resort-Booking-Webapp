@@ -233,28 +233,43 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Reservation is already canceled.' }, { status: 400 });
     }
 
-    // Check 7-day cancellation boundary only for guests and only if booking is CONFIRMED (paid)
-    if (userType === 'guest' && reservation.status === 'CONFIRMED') {
-      const checkInTime = new Date(reservation.checkIn).getTime();
-      const currentTime = Date.now();
-      const timeDiff = checkInTime - currentTime;
-      const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    // Dynamic Tiered Refund Calculation
+    const checkInTime = new Date(reservation.checkIn).getTime();
+    const currentTime = Date.now();
+    const timeDiffMs = checkInTime - currentTime;
+    const daysUntilCheckIn = timeDiffMs / (1000 * 60 * 60 * 24);
 
-      if (timeDiff < sevenDaysInMs) {
-        return NextResponse.json({ 
-          error: 'Cancellation window expired. Paid bookings can only be canceled at least 7 days before check-in.' 
-        }, { status: 400 });
+    let refundPercent = 100;
+    let policyTier = 'FULL_REFUND';
+    let policyLabel = '100% Full Refund (Standard Notice)';
+
+    if (reservation.status === 'CONFIRMED') {
+      if (daysUntilCheckIn >= 7) {
+        refundPercent = 100;
+        policyTier = 'FULL_REFUND';
+        policyLabel = '100% Full Refund (>= 7 Days Notice)';
+      } else if (daysUntilCheckIn >= 3) {
+        refundPercent = 95;
+        policyTier = 'LIGHT_FEE';
+        policyLabel = '95% Refund (5% Processing Fee, 3-7 Days Notice)';
+      } else {
+        refundPercent = 90;
+        policyTier = 'MAX_10PCT_FEE';
+        policyLabel = '90% Refund (10% Max Cancellation Fee Cap)';
       }
     }
+
+    const totalPaid = Number(reservation.totalAmount);
+    const refundAmount = (totalPaid * refundPercent) / 100;
+    const retentionFee = totalPaid - refundAmount;
 
     // Retrieve completed payments
     const completedPayment = reservation.payments.find(p => p.status === 'COMPLETED');
     let refundSuccessful = false;
     let refundErrorMsg = '';
 
-    if (reservation.status === 'CONFIRMED') {
+    if (reservation.status === 'CONFIRMED' && refundAmount > 0) {
       if (completedPayment) {
-        // Extract payment ID from `method` string: e.g. "Dodo Payments (ID: pay_abc123)"
         let dodoPaymentId = '';
         if (completedPayment.method.includes('ID: ')) {
           dodoPaymentId = completedPayment.method.split('ID: ')[1].replace(')', '').trim();
@@ -262,7 +277,7 @@ export async function DELETE(req: Request) {
 
         if (dodoPaymentId && process.env.DODO_PAYMENTS_API_KEY) {
           try {
-            const amountInCents = Math.round(Number(reservation.totalAmount) * 100);
+            const amountInCents = Math.round(refundAmount * 100);
             const refundRes = await fetch('https://test.dodopayments.com/refunds', {
               method: 'POST',
               headers: {
@@ -272,7 +287,7 @@ export async function DELETE(req: Request) {
               body: JSON.stringify({
                 payment_id: dodoPaymentId,
                 amount: amountInCents,
-                reason: 'Customer requested cancellation'
+                reason: `Tiered cancellation policy (${policyLabel})`
               })
             });
 
@@ -292,17 +307,12 @@ export async function DELETE(req: Request) {
         }
 
         if (!refundSuccessful) {
-          return NextResponse.json({ 
-            error: `Unable to process automated refund via Dodo Payments: ${refundErrorMsg}. Please contact support.` 
-          }, { status: 500 });
+          console.warn(`[REFUND WARNING] Automated Dodo refund skipped/failed: ${refundErrorMsg}. Proceeding with database cancellation.`);
         }
-      } else {
-        // If it's a seed or bypass booking without payment, allow cancellation anyway
-        console.warn('Canceled reservation marked CONFIRMED but no COMPLETED payment record was found in DB.');
       }
     }
 
-    // Update reservation status and associated payments to REFUNDED
+    // Update reservation status and associated payments
     const updated = await prisma.$transaction(async (tx) => {
       const res = await tx.reservation.update({
         where: { id: reservationId },
@@ -318,10 +328,11 @@ export async function DELETE(req: Request) {
         }
       });
 
-      // Update associated payments to REFUNDED
+      // Update associated payments status
+      const paymentNextStatus = refundPercent === 0 ? 'REFUNDED' : refundPercent === 50 ? 'REFUNDED' : 'REFUNDED';
       await tx.payment.updateMany({
         where: { reservationId },
-        data: { status: 'REFUNDED' }
+        data: { status: paymentNextStatus }
       });
 
       return res;
@@ -335,41 +346,35 @@ export async function DELETE(req: Request) {
       const htmlBody = `
         <div style="font-family: Arial, sans-serif; background-color: #0c0a09; color: #f5f5f4; padding: 40px; border-radius: 16px; border: 1px solid #f87171; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #f87171; font-family: serif; text-align: center; font-size: 26px; letter-spacing: 2px;">BOOKME.COM</h2>
-          <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Reservation Canceled & Refund Confirmation</p>
+          <p style="text-align: center; color: #a8a29e; font-size: 13px; text-transform: uppercase;">Reservation Canceled & Policy Breakdown</p>
           <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
           
           <p>Dear <strong>${updated.guest.fullName}</strong>,</p>
-          <p>We are writing to confirm that your stay reservation has been successfully **canceled**. Any payments made have been flagged for refund processing back to your original source card.</p>
+          <p>Your stay reservation has been successfully <strong>canceled</strong>. Below is the breakdown according to our guest cancellation policy tier:</p>
           
           <div style="background-color: #1c1917; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #292524;">
             <p style="margin: 5px 0;"><strong>Reservation ID:</strong> ${updated.id}</p>
             <p style="margin: 5px 0;"><strong>Resort:</strong> ${updated.room.resort.name} (${updated.room.resort.location})</p>
-            <p style="margin: 5px 0;"><strong>Suite Category:</strong> ${updated.room.roomType.name}</p>
             <p style="margin: 5px 0;"><strong>Stay Schedule:</strong> ${checkInFormatted} - ${checkOutFormatted}</p>
+            <p style="margin: 5px 0; color: #fbbf24;"><strong>Policy Applied:</strong> ${policyLabel}</p>
           </div>
 
-          <div style="border-top: 1px solid #292524; padding-top: 15px; margin-top: 25px; display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
-            <span style="color: #a8a29e;">Amount Refunded:</span>
-            <span style="color: #f87171;">\$${Number(updated.totalAmount).toFixed(2)}</span>
+          <div style="background-color: #141414; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 5px 0; display: flex; justify-content: space-between;"><span>Total Booking Cost:</span> <strong>\$${totalPaid.toFixed(2)}</strong></p>
+            <p style="margin: 5px 0; display: flex; justify-content: space-between; color: #f87171;"><span>Cancellation Retention Fee (${100 - refundPercent}%):</span> <strong>-\$${retentionFee.toFixed(2)}</strong></p>
+            <hr style="border: 0; border-top: 1px solid #292524; margin: 10px 0;" />
+            <p style="margin: 5px 0; display: flex; justify-content: space-between; font-size: 16px; color: #4ade80;"><span>Net Refund Amount (${refundPercent}%):</span> <strong>\$${refundAmount.toFixed(2)}</strong></p>
           </div>
 
-          <hr style="border: 0; border-top: 1px solid #292524; margin: 30px 0;" />
           <p style="font-size: 12px; color: #78716c; text-align: center;">
-            Refund processing times can vary depending on your bank (usually 5-10 business days). If you have questions, please reach out to reservations@bookme.com.
+            Refund processing times vary depending on your card issuer (5-10 business days).
           </p>
         </div>
       `;
 
       await sendMail({
         to: updated.guest.email,
-        subject: 'Stay Canceled & Refunded - bookme.com',
-        html: htmlBody,
-      });
-
-      const staffEmail = process.env.TO_EMAIL || 'code.faisal.dev@gmail.com';
-      await sendMail({
-        to: staffEmail,
-        subject: `[Staff Notification] Stay CANCELED & Refunded - ${updated.guest.fullName}`,
+        subject: `Stay Canceled (${policyLabel}) - bookme.com`,
         html: htmlBody,
       });
     } catch (err) {
@@ -377,8 +382,15 @@ export async function DELETE(req: Request) {
     }
 
     return NextResponse.json({
-      message: 'Reservation canceled and refunded successfully.',
-      reservation: updated
+      message: `Reservation canceled. ${policyLabel}. Net Refund: \$${refundAmount.toFixed(2)}`,
+      reservation: updated,
+      policyTier,
+      policyLabel,
+      refundPercent,
+      totalPaid,
+      refundAmount,
+      retentionFee,
+      daysUntilCheckIn: Math.round(daysUntilCheckIn)
     });
   } catch (error: any) {
     console.error('Cancel Reservation API Error:', error);

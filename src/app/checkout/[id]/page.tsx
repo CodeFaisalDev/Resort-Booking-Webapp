@@ -18,6 +18,7 @@ import {
   Receipt, 
   Clock, 
   AlertCircle,
+  ShieldAlert,
   ArrowRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -431,6 +432,28 @@ export default function CheckoutPage() {
                         <span className="text-2xl font-serif font-bold text-amber-400 font-mono">
                           ${grandTotal.toFixed(2)}
                         </span>
+                      </div>
+                    </div>
+
+                    {/* Dynamic Cancellation Policy Warning Banner */}
+                    <div className="p-3.5 rounded-xl bg-stone-950/80 border border-stone-800 space-y-1.5 text-[11px]">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-400 uppercase tracking-wider text-[10px] font-mono">
+                        <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Cancellation & Refund Policy Terms</span>
+                      </div>
+                      <div className="space-y-1 text-stone-300 text-[10px]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                          <span><strong>≥ 7 Days Prior:</strong> 100% Full Refund Guarantee ($0 Fee)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span><strong>3 to 7 Days Prior:</strong> 95% Refund (5% Processing Fee)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span><strong>Within 72 Hours:</strong> 90% Refund (10% Max Fee Cap)</span>
+                        </div>
                       </div>
                     </div>
 
